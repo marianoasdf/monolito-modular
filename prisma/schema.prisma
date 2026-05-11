@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BarbershopAppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+model Tenant {
+  id          String                 @id @default(cuid())
+  slug        String                 @unique
+  name        String
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  customers   BarbershopCustomer[]
+  appointments BarbershopAppointment[]
+
+  @@map("tenants")
+}
+
+model BarbershopCustomer {
+  id           String                 @id @default(cuid())
+  tenantId     String
+  fullName     String
+  phoneNumber  String
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  tenant       Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  appointments BarbershopAppointment[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId])
+  @@index([tenantId, phoneNumber])
+  @@map("barbershop_customers")
+}
+
+model BarbershopAppointment {
+  id                String                      @id @default(cuid())
+  tenantId          String
+  customerId        String
+  barberId          String
+  serviceCode       String
+  startsAt          DateTime
+  durationInMinutes Int
+  status            BarbershopAppointmentStatus @default(SCHEDULED)
+  notes             String?
+  createdAt         DateTime                    @default(now())
+  updatedAt         DateTime                    @updatedAt
+  tenant            Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customer          BarbershopCustomer          @relation(fields: [tenantId, customerId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId])
+  @@index([tenantId, customerId])
+  @@index([tenantId, startsAt])
+  @@unique([tenantId, barberId, startsAt])
+  @@map("barbershop_appointments")
+}

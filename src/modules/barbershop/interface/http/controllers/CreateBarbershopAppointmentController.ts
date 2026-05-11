@@ -1,17 +1,6 @@
 import { DomainError } from "../../../../../core/shared/domain/DomainError";
 import { CreateBarbershopAppointmentService } from "../../../application/services/CreateBarbershopAppointmentService";
-
-interface HttpRequestBody {
-  tenantId: string;
-  customerId?: string;
-  customerFullName?: string;
-  customerPhoneNumber?: string;
-  barberId: string;
-  serviceCode: string;
-  startsAt: string;
-  durationInMinutes: number;
-  notes?: string;
-}
+import { CreateBarbershopAppointmentHttpRequest } from "../validators/validateCreateBarbershopAppointmentRequest";
 
 interface HttpResponse {
   status: number;
@@ -21,7 +10,7 @@ interface HttpResponse {
 export class CreateBarbershopAppointmentController {
   constructor(private readonly service: CreateBarbershopAppointmentService) {}
 
-  async handle(body: HttpRequestBody): Promise<HttpResponse> {
+  async handle(body: CreateBarbershopAppointmentHttpRequest): Promise<HttpResponse> {
     try {
       const result = await this.service.execute({
         tenantId: body.tenantId,
@@ -49,7 +38,7 @@ export class CreateBarbershopAppointmentController {
 
       return {
         status: 500,
-        body: { message: "Unexpected error" },
+        body: { message: "Unexpected error while creating appointment" },
       };
     }
   }

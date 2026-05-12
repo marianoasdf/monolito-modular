@@ -1,5 +1,14 @@
 import Link from "next/link";
 
+const realTenants = [
+  {
+    slug: "mgbarber",
+    name: "MG Barber",
+    city: "Tu barbería",
+    focus: "tenant real para operar y personalizar",
+  },
+];
+
 const demoTenants = [
   {
     slug: "crown",
@@ -67,7 +76,31 @@ export default function HomePage(): React.JSX.Element {
 
       <section className="section-heading" id="tenants">
         <div>
-          <h2>Tenants demo para barbería</h2>
+          <h2>Tenant real</h2>
+          <p>Tu barbería ya puede convivir con tenants demo sin mezclarse con ellos.</p>
+        </div>
+      </section>
+
+      <section className="card-grid">
+        {realTenants.map((tenant) => (
+          <article key={tenant.slug} className="feature-card">
+            <p className="eyebrow">/{tenant.slug}/barbershop</p>
+            <h3>{tenant.name}</h3>
+            <p className="muted">
+              {tenant.city} · foco en {tenant.focus}
+            </p>
+            <div className="hero-actions">
+              <Link className="button" href={`/${tenant.slug}/barbershop`}>
+                Abrir tenant real
+              </Link>
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <section className="section-heading">
+        <div>
+          <h2>Tenants demo</h2>
           <p>Cada tenant puede tener branding, servicios y disponibilidad distinta sin salir del mismo código.</p>
         </div>
       </section>

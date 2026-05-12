@@ -44,6 +44,18 @@ const tenants = [
       },
     ],
   },
+  {
+    id: "tenant_mgbarber_001",
+    slug: "mgbarber",
+    name: "MG Barber",
+    customers: [
+      {
+        id: "cust_mgbarber_001",
+        fullName: "Mariano Galli",
+        phoneNumber: "+5491123456789",
+      },
+    ],
+  },
 ];
 
 async function main() {

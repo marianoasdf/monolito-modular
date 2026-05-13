@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { FeaturedBarbershopService } from "../../../modules/barbershop/domain/entities/BarbershopSiteProfile";
+import { normalizeBarbershopPhoneNumber } from "../../../modules/barbershop/domain/value-objects/normalizeBarbershopPhoneNumber";
 
 interface AppointmentBookingFormProps {
   tenantId: string;
@@ -47,7 +48,9 @@ export function AppointmentBookingForm({
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
 
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+
+    const formData = new FormData(form);
     const customerFullName = `${formData.get("customerFullName") || ""}`.trim();
     const customerPhoneNumber = `${formData.get("customerPhoneNumber") || ""}`.trim();
     const startsAt = `${formData.get("startsAt") || ""}`;
@@ -55,6 +58,16 @@ export function AppointmentBookingForm({
 
     if (!selectedService) {
       setSubmitState({ kind: "error", message: "No hay servicios configurados para este tenant." });
+      return;
+    }
+
+    const normalizedPhoneNumber = normalizeBarbershopPhoneNumber(customerPhoneNumber);
+
+    if (!normalizedPhoneNumber) {
+      setSubmitState({
+        kind: "error",
+        message: "Ingresá un celular válido. Ejemplos: 3454200683, 3454 15 200683 o +5493454200683.",
+      });
       return;
     }
 
@@ -70,7 +83,7 @@ export function AppointmentBookingForm({
         body: JSON.stringify({
           tenantId,
           customerFullName,
-          customerPhoneNumber,
+          customerPhoneNumber: normalizedPhoneNumber,
           barberId: `${tenantSlug}-main-barber`,
           serviceCode: selectedService.name.toLowerCase().replace(/\s+/g, "-"),
           startsAt: new Date(startsAt).toISOString(),
@@ -100,7 +113,7 @@ export function AppointmentBookingForm({
         appointmentId: responseBody.appointmentId,
       });
 
-      event.currentTarget.reset();
+      form.reset();
       setSelectedServiceName(services[0]?.name ?? "");
     } catch {
       setSubmitState({
@@ -132,8 +145,9 @@ export function AppointmentBookingForm({
             name="customerPhoneNumber"
             type="tel"
             inputMode="tel"
-            placeholder="+5491122334455"
-            pattern="^\+?[0-9]{8,15}$"
+            placeholder="3454200683 o +5493454200683"
+            pattern="^[0-9+()\s-]{8,20}$"
+            title="Podés escribirlo como 3454200683, 3454 15 200683 o +5493454200683"
             required
           />
         </label>

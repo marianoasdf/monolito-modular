@@ -1,3 +1,5 @@
+import { normalizeBarbershopPhoneNumber } from "../../../domain/value-objects/normalizeBarbershopPhoneNumber";
+
 export interface CreateBarbershopAppointmentHttpRequest {
   tenantId: string;
   customerId?: string;
@@ -48,7 +50,7 @@ export function validateCreateBarbershopAppointmentRequest(
   const tenantId = readOptionalTrimmedString(value.tenantId);
   const customerId = readOptionalTrimmedString(value.customerId);
   const customerFullName = readOptionalTrimmedString(value.customerFullName);
-  const customerPhoneNumber = readOptionalTrimmedString(value.customerPhoneNumber);
+  const rawCustomerPhoneNumber = readOptionalTrimmedString(value.customerPhoneNumber);
   const barberId = readOptionalTrimmedString(value.barberId);
   const serviceCode = readOptionalTrimmedString(value.serviceCode);
   const startsAt = readOptionalTrimmedString(value.startsAt);
@@ -87,6 +89,8 @@ export function validateCreateBarbershopAppointmentRequest(
     errors.push("notes must be at most 300 characters");
   }
 
+  let customerPhoneNumber: string | undefined;
+
   if (customerId) {
     if (customerId.length > 80) {
       errors.push("customerId must be at most 80 characters");
@@ -96,10 +100,18 @@ export function validateCreateBarbershopAppointmentRequest(
       errors.push("customerFullName is required and must be at most 120 characters");
     }
 
-    if (!customerPhoneNumber) {
+    if (!rawCustomerPhoneNumber) {
       errors.push("customerPhoneNumber is required when customerId is not provided");
-    } else if (!/^\+?[0-9]{8,15}$/.test(customerPhoneNumber)) {
-      errors.push("customerPhoneNumber must contain between 8 and 15 digits and may start with +");
+    } else {
+      const normalizedPhoneNumber = normalizeBarbershopPhoneNumber(rawCustomerPhoneNumber);
+
+      if (!normalizedPhoneNumber) {
+        errors.push(
+          "customerPhoneNumber must be a valid mobile number. Ejemplos: 3454200683, 3454 15 200683 o +5493454200683",
+        );
+      } else {
+        customerPhoneNumber = normalizedPhoneNumber;
+      }
     }
   }
 
@@ -116,7 +128,7 @@ export function validateCreateBarbershopAppointmentRequest(
       tenantId: tenantId!,
       customerId,
       customerFullName,
-      customerPhoneNumber,
+      customerPhoneNumber: customerPhoneNumber ?? rawCustomerPhoneNumber,
       barberId: barberId!,
       serviceCode: serviceCode!,
       startsAt: startsAt!,

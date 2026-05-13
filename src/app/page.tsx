@@ -1,4 +1,9 @@
+import { headers } from "next/headers";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { BarbershopTenantView } from "./[tenantSlug]/barbershop/BarbershopTenantView";
+import { isMgBarberPublicHost } from "./isMgBarberPublicHost";
+import { buildGetBarbershopSiteProfileService } from "../modules/barbershop/infra/container/buildGetBarbershopSiteProfileService";
 
 const realTenants = [
   {
@@ -30,7 +35,21 @@ const demoTenants = [
   },
 ];
 
-export default function HomePage(): React.JSX.Element {
+export default async function HomePage(): Promise<React.JSX.Element> {
+  const headersList = await headers();
+  const host = headersList.get("host");
+
+  if (isMgBarberPublicHost(host)) {
+    const service = buildGetBarbershopSiteProfileService();
+    const site = await service.execute({ tenantSlug: "mgbarber" });
+
+    if (!site) {
+      notFound();
+    }
+
+    return <BarbershopTenantView site={site} />;
+  }
+
   return (
     <>
       <section className="hero">
@@ -43,8 +62,8 @@ export default function HomePage(): React.JSX.Element {
           </p>
 
           <div className="hero-actions">
-            <Link className="button" href="/crown/barbershop">
-              Ver demo tenant
+            <Link className="button" href="/mgbarber/barbershop">
+              Ver tenant real
             </Link>
             <Link className="button-secondary" href="#tenants">
               Explorar estructura

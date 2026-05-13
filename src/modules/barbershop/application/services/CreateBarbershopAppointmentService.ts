@@ -3,6 +3,7 @@ import { DomainError } from "../../../../core/shared/domain/DomainError";
 import { UseCase } from "../../../../core/shared/application/UseCase";
 import { BarbershopAppointment } from "../../domain/entities/BarbershopAppointment";
 import { BarbershopCustomer } from "../../domain/entities/BarbershopCustomer";
+import { normalizeBarbershopPhoneNumber } from "../../domain/value-objects/normalizeBarbershopPhoneNumber";
 import { BarbershopAppointmentRepository } from "../../domain/repositories/BarbershopAppointmentRepository";
 import { BarbershopCustomerRepository } from "../../domain/repositories/BarbershopCustomerRepository";
 import { CreateBarbershopAppointmentCommand } from "../dto/CreateBarbershopAppointmentCommand";
@@ -36,9 +37,15 @@ export class CreateBarbershopAppointmentService
       throw new DomainError("customerFullName and customerPhoneNumber are required");
     }
 
+    const normalizedPhoneNumber = normalizeBarbershopPhoneNumber(command.customerPhoneNumber);
+
+    if (!normalizedPhoneNumber) {
+      throw new DomainError("customerPhoneNumber is invalid");
+    }
+
     const existingCustomer = await this.customerRepository.findByPhoneNumber({
       tenantId: command.tenantId,
-      phoneNumber: command.customerPhoneNumber,
+      phoneNumber: normalizedPhoneNumber,
     });
 
     if (existingCustomer) {
@@ -49,7 +56,7 @@ export class CreateBarbershopAppointmentService
       id: crypto.randomUUID(),
       tenantId: command.tenantId,
       fullName: command.customerFullName,
-      phoneNumber: command.customerPhoneNumber,
+      phoneNumber: normalizedPhoneNumber,
     });
 
     await this.customerRepository.save(customer);

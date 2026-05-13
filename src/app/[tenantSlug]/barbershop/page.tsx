@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { AppointmentBookingForm } from "./AppointmentBookingForm";
 import { buildGetBarbershopSiteProfileService } from "../../../modules/barbershop/infra/container/buildGetBarbershopSiteProfileService";
 
 export default async function BarbershopTenantPage({
@@ -54,6 +55,13 @@ export default async function BarbershopTenantPage({
       </section>
 
       <section className="tenant-panels">
+        <AppointmentBookingForm
+          tenantId={site.tenantId}
+          tenantSlug={site.tenantSlug}
+          businessHours={site.businessHours}
+          services={site.featuredServices}
+        />
+
         <article className="tenant-card">
           <p className="eyebrow">Servicios</p>
           <h2>Catálogo visible por tenant</h2>
@@ -96,9 +104,9 @@ export default async function BarbershopTenantPage({
 
       <section className="cta-card">
         <p className="eyebrow">Siguiente paso natural</p>
-        <h2>Conectar esta homepage a Prisma sin romper la estructura.</h2>
+        <h2>La web ya puede reservar turnos sobre la API real.</h2>
         <p>
-          El repositorio en memoria ya marca el punto exacto donde luego vas a cambiar la infraestructura por acceso real a base.
+          El siguiente refinamiento lógico es mejorar UX, validación del lado cliente y personalización visual por tenant.
         </p>
       </section>
     </>

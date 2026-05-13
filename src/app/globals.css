@@ -298,6 +298,86 @@ select {
   gap: 0.9rem;
 }
 
+.booking-card {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.booking-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.booking-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.booking-field span {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.booking-field input,
+.booking-field select,
+.booking-field textarea {
+  width: 100%;
+  border: 1px solid rgba(31, 29, 26, 0.12);
+  background: rgba(255, 250, 242, 0.94);
+  border-radius: 16px;
+  padding: 0.9rem 1rem;
+  color: var(--foreground);
+}
+
+.booking-field textarea {
+  resize: vertical;
+  min-height: 7rem;
+}
+
+.booking-field--full {
+  grid-column: 1 / -1;
+}
+
+.booking-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  background: rgba(181, 93, 61, 0.08);
+  border: 1px solid rgba(181, 93, 61, 0.14);
+}
+
+.booking-submit {
+  width: fit-content;
+}
+
+.booking-feedback {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+}
+
+.booking-feedback--success {
+  background: rgba(41, 95, 71, 0.1);
+  border: 1px solid rgba(41, 95, 71, 0.16);
+  color: var(--success);
+}
+
+.booking-feedback--error {
+  background: rgba(181, 93, 61, 0.1);
+  border: 1px solid rgba(181, 93, 61, 0.16);
+  color: var(--accent-strong);
+}
+
+.booking-errors {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
 .service-list li,
 .slot-list li {
   display: flex;
@@ -365,6 +445,10 @@ select {
 @media (max-width: 640px) {
   .site-main {
     padding-top: 1.25rem;
+  }
+
+  .booking-form {
+    grid-template-columns: 1fr;
   }
 
   .hero-card,

@@ -1,9 +1,19 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import {
+  BarbershopAgendaSlot,
   BarbershopSiteProfile,
   FeaturedBarbershopService,
 } from "../../domain/entities/BarbershopSiteProfile";
 import { BarbershopSiteProfileRepository } from "../../domain/repositories/BarbershopSiteProfileRepository";
+import {
+  ARGENTINA_OFFSET,
+  ARGENTINA_TIME_ZONE,
+  DEFAULT_MIN_ADVANCE_MINUTES,
+  EXPRESS_MIN_ADVANCE_MINUTES,
+  getDefaultConfiguredPhone,
+  resolveExpressSlots,
+  resolveWeeklySchedule,
+} from "../settings/barbershopTenantSettings";
 
 function buildFeaturedServices(name: string): FeaturedBarbershopService[] {
   return [
@@ -15,10 +25,98 @@ function buildFeaturedServices(name: string): FeaturedBarbershopService[] {
 
 function formatSlot(date: Date): string {
   return new Intl.DateTimeFormat("es-AR", {
-    weekday: "short",
     hour: "2-digit",
     minute: "2-digit",
+    hourCycle: "h23",
+    timeZone: ARGENTINA_TIME_ZONE,
   }).format(date);
+}
+
+function getArgentinaDateParts(date: Date): { year: string; month: string; day: string } {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: ARGENTINA_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  const parts = formatter.formatToParts(date);
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+
+  if (!year || !month || !day) {
+    throw new Error("Could not determine Argentina local date");
+  }
+
+  return { year, month, day };
+}
+
+function buildArgentinaDate(year: string, month: string, day: string, time: string): Date {
+  return new Date(`${year}-${month}-${day}T${time}:00${ARGENTINA_OFFSET}`);
+}
+
+function buildWhatsAppUrl(phone: string): string {
+  const phoneDigits = phone.replace(/\D/g, "");
+  return `https://wa.me/${phoneDigits}`;
+}
+
+function buildTodayLabel(date: Date): string {
+  const formatted = new Intl.DateTimeFormat("es-AR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: ARGENTINA_TIME_ZONE,
+  }).format(date);
+
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
+
+function buildTodaySlots(params: {
+  appointments: Array<{ startsAt: Date }>;
+  now: Date;
+  weeklySchedule: Record<number, string[]>;
+  expressBookingSlots: string[];
+}): BarbershopAgendaSlot[] {
+  const { appointments, expressBookingSlots, now, weeklySchedule } = params;
+  const { year, month, day } = getArgentinaDateParts(now);
+  const referenceDate = buildArgentinaDate(year, month, day, "12:00");
+  const weekday = referenceDate.getUTCDay();
+  const configuredSlots = weeklySchedule[weekday] ?? [];
+  const occupiedStartsAt = new Set(
+    appointments.map((appointment) => appointment.startsAt.toISOString()),
+  );
+  const expressBookingSlotSet = new Set(expressBookingSlots);
+
+  return configuredSlots.map((time) => {
+    const slotDate = buildArgentinaDate(year, month, day, time);
+    const minAdvanceMinutes = expressBookingSlotSet.has(time)
+      ? EXPRESS_MIN_ADVANCE_MINUTES
+      : DEFAULT_MIN_ADVANCE_MINUTES;
+    const minBookableDate = new Date(now.getTime() + minAdvanceMinutes * 60 * 1000);
+    const isOccupied = occupiedStartsAt.has(slotDate.toISOString());
+    const isClosedByAdvanceWindow = slotDate.getTime() < minBookableDate.getTime();
+    const status = isOccupied
+      ? "occupied"
+      : isClosedByAdvanceWindow
+        ? "closed"
+        : "available";
+
+    return {
+      startsAt: slotDate.toISOString(),
+      label: formatSlot(slotDate),
+      status,
+      minAdvanceMinutes,
+    };
+  });
+}
+
+interface BarbershopTenantSettingsRecord {
+  phone: string | null;
+  weeklySchedule: Prisma.JsonValue | null;
+  expressSlots: Prisma.JsonValue | null;
+  publicName: string | null;
+  description: string | null;
 }
 
 export class PrismaBarbershopSiteProfileRepository
@@ -27,13 +125,22 @@ export class PrismaBarbershopSiteProfileRepository
   constructor(private readonly prismaClient: PrismaClient) {}
 
   async findByTenantSlug(tenantSlug: string): Promise<BarbershopSiteProfile | null> {
+    const now = new Date();
+    const { year, month, day } = getArgentinaDateParts(now);
+    const dayStart = buildArgentinaDate(year, month, day, "00:00");
+    const nextDayStart = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
     const tenant = await this.prismaClient.tenant.findUnique({
       where: { slug: tenantSlug },
       include: {
         appointments: {
-          where: { status: "SCHEDULED", startsAt: { gte: new Date() } },
+          where: {
+            status: "SCHEDULED",
+            startsAt: {
+              gte: dayStart,
+              lt: nextDayStart,
+            },
+          },
           orderBy: { startsAt: "asc" },
-          take: 3,
         },
       },
     });
@@ -42,25 +149,46 @@ export class PrismaBarbershopSiteProfileRepository
       return null;
     }
 
-    const highlightedSlots =
-      tenant.appointments.length > 0
-        ? tenant.appointments.map((appointment) => formatSlot(appointment.startsAt))
-        : ["Lun 10:00", "Lun 12:00", "Lun 16:00"];
+    const settingsRows = await this.prismaClient.$queryRaw<BarbershopTenantSettingsRecord[]>`
+      SELECT
+        phone,
+        "weeklySchedule" AS "weeklySchedule",
+        "expressSlots" AS "expressSlots",
+        "publicName" AS "publicName",
+        description
+      FROM barbershop_tenant_settings
+      WHERE "tenantId" = ${tenant.id}
+      LIMIT 1
+    `;
+    const settings = settingsRows[0] ?? null;
+
+    const phone = settings?.phone ?? getDefaultConfiguredPhone(tenant.slug);
+    const weeklySchedule = resolveWeeklySchedule(settings?.weeklySchedule);
+    const expressBookingSlots = resolveExpressSlots(settings?.expressSlots);
+    const publicName = settings?.publicName?.trim() || tenant.name;
+    const description = settings?.description?.trim() || "Toca un cuadrado verde y listo.";
+    const todaySlots = buildTodaySlots({
+      appointments: tenant.appointments,
+      expressBookingSlots,
+      now,
+      weeklySchedule,
+    });
 
     return {
       tenantId: tenant.id,
       tenantSlug: tenant.slug,
-      name: tenant.name,
-      tagline: "Operación barbería conectada a Prisma",
-      description:
-        "Este tenant ya se resuelve desde PostgreSQL. Los textos comerciales siguen genéricos hasta definir metadata propia o seeds de demo.",
-      city: "Ciudad pendiente",
-      neighborhood: "Barrio pendiente",
-      specialty: "agenda, clientes y turnos",
-      phone: "+540000000000",
+      name: publicName,
+      tagline: "Autoagenda rápida",
+      description,
+      city: "Tu zona",
+      neighborhood: "Atención por turnos",
+      specialty: "cortes del día",
+      phone,
+      whatsAppUrl: buildWhatsAppUrl(phone),
       businessHours: "Lun a Sáb · 10:00 a 20:00",
-      highlightedSlots,
-      featuredServices: buildFeaturedServices(tenant.name),
+      todayLabel: buildTodayLabel(now),
+      todaySlots,
+      featuredServices: buildFeaturedServices(publicName),
     };
   }
 }

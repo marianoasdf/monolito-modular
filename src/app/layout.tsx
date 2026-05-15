@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
+import { isMgBarberPublicHost } from "./isMgBarberPublicHost";
+import { SiteHeaderNav } from "./SiteHeaderNav";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -7,11 +10,15 @@ export const metadata: Metadata = {
   description: "Base Next.js tenant-aware para una barbería multi-SaaS modular.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>): React.JSX.Element {
+}>): Promise<React.JSX.Element> {
+  const headersList = await headers();
+  const host = headersList.get("host");
+  const isPublicMgBarberHost = isMgBarberPublicHost(host);
+
   return (
     <html lang="es">
       <body>
@@ -23,11 +30,7 @@ export default function RootLayout({
                 <span>Barber Modular</span>
               </Link>
 
-              <nav className="site-nav" aria-label="Principal">
-                <Link href="/">Inicio</Link>
-                <Link href="/crown/barbershop">Demo Crown</Link>
-                <Link href="/heritage/barbershop">Demo Heritage</Link>
-              </nav>
+              <SiteHeaderNav isPublicMgBarberHost={isPublicMgBarberHost} />
             </div>
           </header>
 

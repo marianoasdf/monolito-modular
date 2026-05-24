@@ -1,4 +1,4 @@
-import { ConsoleNotificationSender } from "../../../../core/notifications/infra/ConsoleNotificationSender";
+import { WebhookNotificationSender } from "../../../../core/notifications/infra/WebhookNotificationSender";
 import { prisma } from "../../../../core/shared/infra/prisma/prismaClient";
 import { CreateBarbershopAppointmentService } from "../../application/services/CreateBarbershopAppointmentService";
 import { CreateBarbershopAppointmentController } from "../../interface/http/controllers/CreateBarbershopAppointmentController";
@@ -8,7 +8,7 @@ import { PrismaBarbershopAppointmentRepository } from "../persistence/repositori
 export function buildCreateBarbershopAppointmentController(): CreateBarbershopAppointmentController {
   const appointmentRepository = new PrismaBarbershopAppointmentRepository(prisma);
   const customerRepository = new PrismaBarbershopCustomerRepository(prisma);
-  const notificationSender = new ConsoleNotificationSender();
+  const notificationSender = new WebhookNotificationSender();
   const service = new CreateBarbershopAppointmentService(
     appointmentRepository,
     customerRepository,

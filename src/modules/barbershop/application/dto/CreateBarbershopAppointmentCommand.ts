@@ -5,6 +5,7 @@ export interface CreateBarbershopAppointmentCommand {
   customerPhoneNumber?: string;
   barberId: string;
   serviceCode: string;
+  serviceName?: string;
   startsAt: Date;
   durationInMinutes: number;
   notes?: string;

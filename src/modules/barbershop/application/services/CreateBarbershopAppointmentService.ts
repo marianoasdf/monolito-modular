@@ -64,6 +64,10 @@ export class CreateBarbershopAppointmentService
     return customer;
   }
 
+  private resolveServiceName(command: CreateBarbershopAppointmentCommand): string {
+    return command.serviceName?.trim() || command.serviceCode.replace(/-/g, " ");
+  }
+
   async execute(
     command: CreateBarbershopAppointmentCommand,
   ): Promise<{ appointmentId: string }> {
@@ -93,12 +97,23 @@ export class CreateBarbershopAppointmentService
 
     await this.appointmentRepository.save(appointment);
 
-    await this.notificationSender.send({
-      tenantId: command.tenantId,
-      recipient: customer.toPrimitives().phoneNumber,
-      subject: "Turno confirmado",
-      body: `Tu turno fue reservado para ${command.startsAt.toISOString()}`,
-    });
+    try {
+      await this.notificationSender.send({
+        tenantId: command.tenantId,
+        recipient: customer.toPrimitives().phoneNumber,
+        subject: "Nueva reserva",
+        body: `Nueva reserva de ${customer.toPrimitives().fullName} para ${this.resolveServiceName(command)} el ${command.startsAt.toISOString()}`,
+        metadata: {
+          customerName: customer.toPrimitives().fullName,
+          customerPhoneNumber: customer.toPrimitives().phoneNumber,
+          serviceName: this.resolveServiceName(command),
+          startsAtIso: command.startsAt.toISOString(),
+          notes: command.notes,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to send appointment notification", error);
+    }
 
     return { appointmentId: appointment.toPrimitives().id };
   }

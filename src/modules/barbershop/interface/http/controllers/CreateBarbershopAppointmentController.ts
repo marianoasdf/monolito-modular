@@ -19,6 +19,7 @@ export class CreateBarbershopAppointmentController {
         customerPhoneNumber: body.customerPhoneNumber,
         barberId: body.barberId,
         serviceCode: body.serviceCode,
+        serviceName: body.serviceName,
         startsAt: new Date(body.startsAt),
         durationInMinutes: body.durationInMinutes,
         notes: body.notes,

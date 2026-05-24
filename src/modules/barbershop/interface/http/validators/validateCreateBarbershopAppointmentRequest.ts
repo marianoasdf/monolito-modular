@@ -7,6 +7,7 @@ export interface CreateBarbershopAppointmentHttpRequest {
   customerPhoneNumber?: string;
   barberId: string;
   serviceCode: string;
+  serviceName?: string;
   startsAt: string;
   durationInMinutes: number;
   notes?: string;
@@ -53,6 +54,7 @@ export function validateCreateBarbershopAppointmentRequest(
   const rawCustomerPhoneNumber = readOptionalTrimmedString(value.customerPhoneNumber);
   const barberId = readOptionalTrimmedString(value.barberId);
   const serviceCode = readOptionalTrimmedString(value.serviceCode);
+  const serviceName = readOptionalTrimmedString(value.serviceName);
   const startsAt = readOptionalTrimmedString(value.startsAt);
   const notes = readOptionalTrimmedString(value.notes);
   const errors: string[] = [];
@@ -70,6 +72,10 @@ export function validateCreateBarbershopAppointmentRequest(
 
   if (!serviceCode || serviceCode.length > 80) {
     errors.push("serviceCode is required and must be at most 80 characters");
+  }
+
+  if (serviceName && serviceName.length > 120) {
+    errors.push("serviceName must be at most 120 characters");
   }
 
   if (!startsAt) {
@@ -131,6 +137,7 @@ export function validateCreateBarbershopAppointmentRequest(
       customerPhoneNumber: customerPhoneNumber ?? rawCustomerPhoneNumber,
       barberId: barberId!,
       serviceCode: serviceCode!,
+      serviceName,
       startsAt: startsAt!,
       durationInMinutes,
       notes,

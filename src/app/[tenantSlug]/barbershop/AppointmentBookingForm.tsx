@@ -93,8 +93,10 @@ export function AppointmentBookingForm({
           customerPhoneNumber: normalizedPhoneNumber,
           barberId: `${tenantSlug}-main-barber`,
           serviceCode: selectedService.name.toLowerCase().replace(/\s+/g, "-"),
+          serviceName: selectedService.name,
           startsAt: selectedSlot.startsAt,
           durationInMinutes: selectedService.durationInMinutes,
+          notes: formData.get("notes") || undefined,
         }),
       });
 
@@ -226,6 +228,16 @@ export function AppointmentBookingForm({
           <strong>{selectedSlot ? selectedSlot.label : "Tocá un cuadrado verde"}</strong>
           <span>{selectedService?.durationInMinutes ?? 0} min</span>
         </div>
+
+        <label className="booking-field booking-field--full">
+          <span className="sr-only">Nota (opcional)</span>
+          <textarea
+            name="notes"
+            maxLength={300}
+            placeholder="Nota opcional (ej: urgente, corte con máquina, etc.)"
+            rows={3}
+          />
+        </label>
 
         <button className="button booking-submit" disabled={isSubmitting} type="submit">
           {isSubmitting ? "Reservando..." : "Reservar"}

@@ -295,11 +295,8 @@ export function AppointmentBookingForm({
 
       {submitState.kind === "success" ? (
         <div className="booking-feedback booking-feedback--success">
-          <strong>{submitState.message}</strong>
-          <span>ID: {submitState.appointmentId}</span>
-          <a href={whatsAppUrl} rel="noreferrer" target="_blank">
-            Confirmar por WhatsApp
-          </a>
+          <strong>Turno reservado correctamente.</strong>
+          <span>Gracias por reservar, nos vemos en tu horario.</span>
         </div>
       ) : null}
 

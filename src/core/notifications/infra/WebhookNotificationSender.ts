@@ -17,8 +17,12 @@ function formatAppointmentDateTime(isoDate: string | undefined): string | null {
   }
 
   return new Intl.DateTimeFormat("es-AR", {
-    dateStyle: "short",
-    timeStyle: "short",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
     timeZone: ARGENTINA_TIME_ZONE,
   }).format(date);
 }

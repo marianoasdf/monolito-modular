@@ -3,8 +3,8 @@ export type WeeklyScheduleByWeekday = Record<number, string[]>;
 export const ARGENTINA_OFFSET = "-03:00";
 export const ARGENTINA_TIME_ZONE = "America/Argentina/Buenos_Aires";
 
-export const DEFAULT_MIN_ADVANCE_MINUTES = 5;
-export const EXPRESS_MIN_ADVANCE_MINUTES = 5;
+export const DEFAULT_MIN_ADVANCE_MINUTES = 60;
+export const EXPRESS_MIN_ADVANCE_MINUTES = 30;
 
 
 

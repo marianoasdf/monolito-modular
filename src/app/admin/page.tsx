@@ -110,7 +110,7 @@ export default async function AdminPage({
               Ver sitio
             </Link>
             <form action={logoutAdminAction}>
-              <button className="button-secondary" type="submit">
+              <button className="button" type="submit">
                 Salir
               </button>
             </form>

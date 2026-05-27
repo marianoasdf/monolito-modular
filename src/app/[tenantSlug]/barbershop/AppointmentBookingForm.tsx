@@ -1,11 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   BarbershopAgendaSlot,
   FeaturedBarbershopService,
 } from "../../../modules/barbershop/domain/entities/BarbershopSiteProfile";
 import { normalizeBarbershopPhoneNumber } from "../../../modules/barbershop/domain/value-objects/normalizeBarbershopPhoneNumber";
+
+function formatDuration(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours === 0) return `${mins}m`;
+  if (mins === 0) return `${hours}h`;
+  return `${hours}h ${mins}m`;
+}
+
+function formatServiceLabel(service: FeaturedBarbershopService): string {
+  return `${service.name.toLowerCase()} · ${formatDuration(service.durationInMinutes)} · ${service.priceInArs}$`;
+}
 
 interface AppointmentBookingFormProps {
   tenantId: string;
@@ -35,6 +47,7 @@ export function AppointmentBookingForm({
   const [selectedSlotStartsAt, setSelectedSlotStartsAt] = useState<string>("");
   const [submitState, setSubmitState] = useState<SubmitState>({ kind: "idle" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const bookingSummaryRef = useRef<HTMLDivElement>(null);
 
   const selectedService =
     services.find((service) => service.name === selectedServiceName) ?? services[0];
@@ -50,14 +63,39 @@ export function AppointmentBookingForm({
     );
   }
 
+  function scrollToBookingSummary(): void {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const isMobileViewport = window.matchMedia("(max-width: 640px)").matches;
+
+    if (!isMobileViewport) {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      bookingSummaryRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    });
+  }
+
+  function handleSlotSelection(slotStartsAt: string): void {
+    setSelectedSlotStartsAt(slotStartsAt);
+    setSubmitState({ kind: "idle" });
+    scrollToBookingSummary();
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
 
     const form = event.currentTarget;
-
     const formData = new FormData(form);
     const customerFullName = `${formData.get("customerFullName") || ""}`.trim();
     const customerPhoneNumber = `${formData.get("customerPhoneNumber") || ""}`.trim();
+
     if (!selectedService) {
       setSubmitState({ kind: "error", message: "No hay servicios configurados para este tenant." });
       return;
@@ -140,7 +178,10 @@ export function AppointmentBookingForm({
         <h2>{todayLabel}</h2>
       </div>
 
-      <div className="agenda-grid" aria-label="Turnos del día">
+      <div
+        className="agenda-grid"
+        aria-label="Turnos del día"
+      >
         {todaySlots.map((slot) => {
           const isSelected = slot.startsAt === selectedSlotStartsAt;
           const isAvailable = slot.status === "available";
@@ -168,11 +209,9 @@ export function AppointmentBookingForm({
                 .filter(Boolean)
                 .join(" ")}
               aria-label={slotLabel}
+              data-slot-starts-at={slot.startsAt}
               disabled={!isAvailable || isSubmitting}
-              onClick={() => {
-                setSelectedSlotStartsAt(slot.startsAt);
-                setSubmitState({ kind: "idle" });
-              }}
+              onClick={() => handleSlotSelection(slot.startsAt)}
               type="button"
             >
               <span>{slot.label}</span>
@@ -217,16 +256,26 @@ export function AppointmentBookingForm({
             >
               {services.map((service) => (
                 <option key={service.name} value={service.name}>
-                  {service.name} · {service.durationInMinutes} min
+                  {formatServiceLabel(service)}
                 </option>
               ))}
             </select>
           </label>
         ) : null}
 
-        <div className="booking-summary booking-field--full">
+        <div
+          ref={bookingSummaryRef}
+          className={[
+            "booking-summary",
+            "booking-field--full",
+            selectedSlot ? "booking-summary--selected" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          aria-live="polite"
+        >
           <strong>{selectedSlot ? selectedSlot.label : "Tocá un cuadrado verde"}</strong>
-          <span>{selectedService?.durationInMinutes ?? 0} min</span>
+          <span>{selectedService ? formatDuration(selectedService.durationInMinutes) : "Seleccioná un servicio"}</span>
         </div>
 
         <label className="booking-field booking-field--full">

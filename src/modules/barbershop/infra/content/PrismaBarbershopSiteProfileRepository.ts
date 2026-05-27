@@ -15,11 +15,11 @@ import {
   resolveWeeklySchedule,
 } from "../settings/barbershopTenantSettings";
 
-function buildFeaturedServices(name: string): FeaturedBarbershopService[] {
+function buildFeaturedServices(): FeaturedBarbershopService[] {
   return [
-    { name: `${name} Corte`, durationInMinutes: 45, priceInArs: 16000 },
-    { name: `${name} Barba`, durationInMinutes: 30, priceInArs: 11000 },
-    { name: `${name} Combo`, durationInMinutes: 70, priceInArs: 24000 },
+    { name: "corte", durationInMinutes: 60, priceInArs: 15 },
+    { name: "barba", durationInMinutes: 30, priceInArs: 10 },
+    { name: "combo", durationInMinutes: 90, priceInArs: 20 },
   ];
 }
 
@@ -188,7 +188,7 @@ export class PrismaBarbershopSiteProfileRepository
       businessHours: "Lun a Sáb · 10:00 a 20:00",
       todayLabel: buildTodayLabel(now),
       todaySlots,
-      featuredServices: buildFeaturedServices(publicName),
+      featuredServices: buildFeaturedServices(),
     };
   }
 }

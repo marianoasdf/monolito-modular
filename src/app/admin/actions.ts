@@ -95,3 +95,30 @@ export async function saveAdminSettingsAction(formData: FormData): Promise<void>
   revalidatePath("/admin");
   redirect("/admin?saved=1");
 }
+
+export async function cancelAppointmentAction(formData: FormData): Promise<void> {
+  const authenticated = await isAdminAuthenticated();
+
+  if (!authenticated) {
+    redirect("/admin?error=auth");
+  }
+
+  const appointmentId = `${formData.get("appointmentId") || ""}`;
+  const tenantId = `${formData.get("tenantId") || ""}`;
+
+  if (!appointmentId || !tenantId) {
+    redirect("/admin");
+  }
+
+  await prisma.barbershopAppointment.deleteMany({
+    where: {
+      id: appointmentId,
+      tenantId,
+    },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/mgbarber/barbershop");
+  revalidatePath("/admin");
+  redirect("/admin");
+}

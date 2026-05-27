@@ -37,6 +37,7 @@ export class CreateBarbershopAppointmentController {
         };
       }
 
+      console.error("Unexpected error while creating appointment:", error);
       return {
         status: 500,
         body: { message: "Unexpected error while creating appointment" },

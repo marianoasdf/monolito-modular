@@ -376,6 +376,42 @@ select {
   max-width: 34rem;
 }
 
+.admin-appointments {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-section-title {
+  font-size: 1.1rem;
+}
+
+.admin-appointments-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-appointment-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+
+.admin-appointment-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.admin-appointment-info span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 .agenda-intro {
   display: grid;
   gap: 0.25rem;

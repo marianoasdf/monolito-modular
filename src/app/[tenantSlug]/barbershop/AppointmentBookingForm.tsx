@@ -48,6 +48,7 @@ export function AppointmentBookingForm({
   const [submitState, setSubmitState] = useState<SubmitState>({ kind: "idle" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const bookingSummaryRef = useRef<HTMLDivElement>(null);
+  const successRef = useRef<HTMLDivElement>(null);
 
   const selectedService =
     services.find((service) => service.name === selectedServiceName) ?? services[0];
@@ -162,6 +163,10 @@ export function AppointmentBookingForm({
       form.reset();
       setSelectedServiceName(services[0]?.name ?? "");
       setSelectedSlotStartsAt("");
+
+      setTimeout(() => {
+        successRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
     } catch {
       setSubmitState({
         kind: "error",
@@ -294,7 +299,7 @@ export function AppointmentBookingForm({
       </form>
 
       {submitState.kind === "success" ? (
-        <div className="booking-feedback booking-feedback--success">
+        <div ref={successRef} className="booking-feedback booking-feedback--success">
           <strong>Turno reservado correctamente.</strong>
           <span>Gracias por reservar, nos vemos en tu horario.</span>
         </div>

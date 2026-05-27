@@ -8,7 +8,7 @@ import {
   resolveWeeklySchedule,
   WEEKDAY_FIELDS,
 } from "../../modules/barbershop/infra/settings/barbershopTenantSettings";
-import { loginAdminAction, logoutAdminAction, saveAdminSettingsAction } from "./actions";
+import { cancelAppointmentAction, loginAdminAction, logoutAdminAction, saveAdminSettingsAction } from "./actions";
 import { getAdminAccessPassword, isAdminAuthenticated } from "./auth";
 
 function getMessage(error: string | undefined): string | null {
@@ -96,6 +96,22 @@ export default async function AdminPage({
     ? resolveExpressSlots(tenant.settings.expressSlots)
     : [...DEFAULT_EXPRESS_BOOKING_SLOTS];
 
+  const appointments = await prisma.barbershopAppointment.findMany({
+    where: {
+      tenantId: tenant.id,
+      status: "SCHEDULED",
+      startsAt: {
+        gte: new Date(),
+      },
+    },
+    include: {
+      customer: true,
+    },
+    orderBy: {
+      startsAt: "asc",
+    },
+  });
+
   return (
     <section className="admin-shell">
       <article className="tenant-card admin-card">
@@ -178,6 +194,33 @@ export default async function AdminPage({
             Guardar cambios
           </button>
         </form>
+
+        <section className="admin-appointments">
+          <h2 className="admin-section-title">Reservas activas ({appointments.length})</h2>
+          {appointments.length === 0 ? (
+            <p className="admin-empty-state">No hay reservas activas</p>
+          ) : (
+            <div className="admin-appointments-list">
+              {appointments.map((appointment) => (
+                <div key={appointment.id} className="admin-appointment-card">
+                  <div className="admin-appointment-info">
+                    <strong>{appointment.customer.fullName}</strong>
+                    <span>{appointment.customer.phoneNumber}</span>
+                    <span>{new Date(appointment.startsAt).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", timeZone: "America/Argentina/Buenos_Aires" })} {new Date(appointment.startsAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "America/Argentina/Buenos_Aires" })}</span>
+                    <span>{appointment.serviceCode}</span>
+                  </div>
+                  <form action={cancelAppointmentAction}>
+                    <input name="appointmentId" type="hidden" value={appointment.id} />
+                    <input name="tenantId" type="hidden" value={tenant.id} />
+                    <button className="button admin-cancel-btn" type="submit">
+                      Cancelar
+                    </button>
+                  </form>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </article>
     </section>
   );

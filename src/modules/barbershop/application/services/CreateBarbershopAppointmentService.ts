@@ -49,6 +49,17 @@ export class CreateBarbershopAppointmentService
     });
 
     if (existingCustomer) {
+      // Si se pasó un nombre diferente, actualizar el cliente (para autoreservas)
+      if (command.customerFullName && existingCustomer.toPrimitives().fullName !== command.customerFullName) {
+        const updatedCustomer = BarbershopCustomer.create({
+          id: existingCustomer.toPrimitives().id,
+          tenantId: command.tenantId,
+          fullName: command.customerFullName,
+          phoneNumber: normalizedPhoneNumber,
+        });
+        await this.customerRepository.save(updatedCustomer);
+        return updatedCustomer;
+      }
       return existingCustomer;
     }
 

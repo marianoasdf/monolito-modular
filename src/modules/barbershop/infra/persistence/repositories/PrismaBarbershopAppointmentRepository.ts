@@ -28,6 +28,15 @@ export class PrismaBarbershopAppointmentRepository
   async save(appointment: BarbershopAppointment): Promise<void> {
     const props = appointment.toPrimitives();
 
+    await this.prismaClient.barbershopAppointment.deleteMany({
+      where: {
+        tenantId: props.tenantId,
+        barberId: props.barberId,
+        startsAt: props.startsAt,
+        status: "CANCELLED",
+      },
+    });
+
     await this.prismaClient.barbershopAppointment.create({
       data: {
         id: props.id,

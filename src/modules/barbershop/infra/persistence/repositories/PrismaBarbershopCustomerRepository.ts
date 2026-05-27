@@ -51,8 +51,13 @@ export class PrismaBarbershopCustomerRepository implements BarbershopCustomerRep
   async save(customer: BarbershopCustomer): Promise<void> {
     const props = customer.toPrimitives();
 
-    await this.prismaClient.barbershopCustomer.create({
-      data: {
+    await this.prismaClient.barbershopCustomer.upsert({
+      where: { id: props.id },
+      update: {
+        fullName: props.fullName,
+        phoneNumber: props.phoneNumber,
+      },
+      create: {
         id: props.id,
         tenantId: props.tenantId,
         fullName: props.fullName,

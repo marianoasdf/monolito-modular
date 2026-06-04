@@ -1,15 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "../../core/shared/infra/prisma/prismaClient";
 
 // Optional: ensure this route is handled at runtime (prevents static optimization)
 export const dynamic = "force-dynamic";
 
-function getVerifyToken(): string {
-  return (
-    process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN ||
-    process.env.WEBHOOK_VERIFY_TOKEN ||
-    process.env.VERIFY_TOKEN ||
-    ""
-  );
+async function isValidVerifyToken(token: string): Promise<boolean> {
+  // Buscar todas las integraciones de WhatsApp y validar el token contra cada una
+  const integrations = await prisma.tenantIntegration.findMany({
+    where: { provider: "whatsapp" },
+  });
+
+  for (const integration of integrations) {
+    if (typeof integration.config !== "object" || integration.config === null) {
+      continue;
+    }
+
+    const config = integration.config as Record<string, unknown>;
+    const webhookVerifyToken = typeof config.webhookVerifyToken === "string" ? config.webhookVerifyToken : null;
+
+    if (webhookVerifyToken && token === webhookVerifyToken) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 export async function GET(request: NextRequest): Promise<Response> {
@@ -18,9 +32,7 @@ export async function GET(request: NextRequest): Promise<Response> {
   const token = url.searchParams.get("hub.verify_token");
   const challenge = url.searchParams.get("hub.challenge");
 
-  const verifyToken = getVerifyToken();
-
-  if (mode === "subscribe" && token && token === verifyToken) {
+  if (mode === "subscribe" && token && await isValidVerifyToken(token)) {
     // Echo the challenge so Meta can verify the webhook URL
     return new NextResponse(String(challenge ?? ""), { status: 200 });
   }

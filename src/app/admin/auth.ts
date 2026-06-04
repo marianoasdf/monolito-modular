@@ -1,19 +1,33 @@
 import { cookies } from "next/headers";
+import { prisma } from "../../core/shared/infra/prisma/prismaClient";
+import bcrypt from "bcrypt";
 
 const ADMIN_SESSION_COOKIE_NAME = "mgbarber_admin_session";
 
-export function getAdminAccessPassword(): string | null {
-  const configuredPassword = process.env.ADMIN_ACCESS_PASSWORD?.trim();
+export async function validateAdminPassword(password: string): Promise<boolean> {
+  const tenant = await prisma.tenant.findUnique({
+    where: { slug: "mgbarber" },
+  });
 
-  if (configuredPassword) {
-    return configuredPassword;
+  if (!tenant) {
+    if (process.env.NODE_ENV !== "production" && password === "admin-local") {
+      return true;
+    }
+    return false;
   }
 
-  if (process.env.NODE_ENV !== "production") {
-    return "admin-local";
+  const auth = await prisma.tenantAuth.findUnique({
+    where: { tenantId: tenant.id },
+  });
+
+  if (!auth?.adminPasswordHash) {
+    if (process.env.NODE_ENV !== "production" && password === "admin-local") {
+      return true;
+    }
+    return false;
   }
 
-  return null;
+  return await bcrypt.compare(password, auth.adminPasswordHash);
 }
 
 export async function isAdminAuthenticated(): Promise<boolean> {

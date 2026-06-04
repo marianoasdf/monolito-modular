@@ -92,11 +92,3 @@ export function resolveExpressSlots(value: unknown): string[] {
 
   return slots.length > 0 ? slots : [...DEFAULT_EXPRESS_BOOKING_SLOTS];
 }
-
-export function getDefaultConfiguredPhone(tenantSlug: string): string {
-  if (tenantSlug === "mgbarber") {
-    return "+5493454200683";
-  }
-
-  return "+540000000000";
-}

@@ -9,15 +9,11 @@ import {
   WEEKDAY_FIELDS,
 } from "../../modules/barbershop/infra/settings/barbershopTenantSettings";
 import { cancelAppointmentAction, loginAdminAction, logoutAdminAction, saveAdminSettingsAction } from "./actions";
-import { getAdminAccessPassword, isAdminAuthenticated } from "./auth";
+import { isAdminAuthenticated } from "./auth";
 
 function getMessage(error: string | undefined): string | null {
   if (error === "invalid-password") {
     return "Clave incorrecta.";
-  }
-
-  if (error === "no-password") {
-    return "Falta configurar ADMIN_ACCESS_PASSWORD en el entorno.";
   }
 
   if (error === "phone") {
@@ -44,7 +40,6 @@ export default async function AdminPage({
   const error = Array.isArray(query.error) ? query.error[0] : query.error;
   const saved = Array.isArray(query.saved) ? query.saved[0] : query.saved;
   const authenticated = await isAdminAuthenticated();
-  const configuredPassword = getAdminAccessPassword();
   const message = getMessage(error);
 
   if (!authenticated) {
@@ -56,11 +51,7 @@ export default async function AdminPage({
           <p className="lead admin-lead">Usa esta pantalla para cambiar nombre, horarios, WhatsApp y anticipacion.</p>
 
           {message ? <div className="booking-feedback booking-feedback--error"><strong>{message}</strong></div> : null}
-          {!configuredPassword ? (
-            <div className="booking-feedback booking-feedback--error">
-              <strong>Configura ADMIN_ACCESS_PASSWORD antes de usar el panel.</strong>
-            </div>
-          ) : process.env.NODE_ENV !== "production" && configuredPassword === "admin-local" ? (
+          {process.env.NODE_ENV !== "production" ? (
             <div className="booking-feedback booking-feedback--success">
               <strong>Clave local: admin-local</strong>
             </div>

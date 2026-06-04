@@ -11,20 +11,16 @@ import {
 } from "../../modules/barbershop/infra/settings/barbershopTenantSettings";
 import {
   clearAdminAuthenticated,
-  getAdminAccessPassword,
   isAdminAuthenticated,
   setAdminAuthenticated,
+  validateAdminPassword,
 } from "./auth";
 
 export async function loginAdminAction(formData: FormData): Promise<void> {
-  const configuredPassword = getAdminAccessPassword();
   const password = `${formData.get("password") || ""}`;
+  const isValid = await validateAdminPassword(password);
 
-  if (!configuredPassword) {
-    redirect("/admin?error=no-password");
-  }
-
-  if (password !== configuredPassword) {
+  if (!isValid) {
     redirect("/admin?error=invalid-password");
   }
 

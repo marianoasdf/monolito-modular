@@ -10,7 +10,6 @@ import {
   ARGENTINA_TIME_ZONE,
   DEFAULT_MIN_ADVANCE_MINUTES,
   EXPRESS_MIN_ADVANCE_MINUTES,
-  getDefaultConfiguredPhone,
   resolveExpressSlots,
   resolveWeeklySchedule,
 } from "../settings/barbershopTenantSettings";
@@ -162,7 +161,10 @@ export class PrismaBarbershopSiteProfileRepository
     `;
     const settings = settingsRows[0] ?? null;
 
-    const phone = settings?.phone ?? getDefaultConfiguredPhone(tenant.slug);
+    const phone = settings?.phone;
+    if (!phone) {
+      throw new Error(`Tenant ${tenant.slug} no tiene teléfono configurado. Configúralo en BarbershopTenantSettings.phone`);
+    }
     const weeklySchedule = resolveWeeklySchedule(settings?.weeklySchedule);
     const expressBookingSlots = resolveExpressSlots(settings?.expressSlots);
     const publicName = settings?.publicName?.trim() || tenant.name;

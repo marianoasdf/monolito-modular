@@ -29,9 +29,9 @@ function formatAppointmentDateTime(isoDate: string | undefined): string | null {
 
 export class WebhookNotificationSender implements NotificationSender {
   constructor(
-    private readonly phoneNumberId: string = process.env.WHATSAPP_PHONE_NUMBER_ID || "",
-    private readonly apiToken: string = process.env.WHATSAPP_API_TOKEN || "",
-    private readonly recipientPhoneNumber: string = process.env.WHATSAPP_RECIPIENT_PHONE_NUMBER || "",
+    private readonly phoneNumberId: string,
+    private readonly apiToken: string,
+    private readonly recipientPhoneNumber: string,
   ) {}
 
   async send(message: NotificationMessage): Promise<void> {

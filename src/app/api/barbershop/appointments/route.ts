@@ -71,7 +71,7 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  const controller = buildCreateBarbershopAppointmentController();
+  const controller = await buildCreateBarbershopAppointmentController(validation.data.tenantId);
   const response = await controller.handle(validation.data);
 
   return Response.json(response.body, {

@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { prisma } from "../../core/shared/infra/prisma/prismaClient";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 const ADMIN_SESSION_COOKIE_NAME = "mgbarber_admin_session";
 

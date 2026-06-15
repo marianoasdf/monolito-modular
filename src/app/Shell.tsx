@@ -10,10 +10,11 @@ interface ShellProps {
 export function Shell({ children }: ShellProps): React.JSX.Element {
   const pathname = usePathname();
   const isMgBarberPath = pathname?.startsWith("/mgbarber") ?? false;
+  const isLegalPath = pathname?.startsWith("/privacy") || pathname?.startsWith("/terms") || false;
   const isMgBarberDomain = typeof window !== "undefined" && 
     (window.location.hostname === "mgbarber.xyz" || 
      window.location.hostname === "www.mgbarber.xyz");
-  const isMgBarber = isMgBarberPath || isMgBarberDomain;
+  const isMgBarber = isMgBarberPath || isLegalPath || isMgBarberDomain;
 
   return (
     <div className="shell">

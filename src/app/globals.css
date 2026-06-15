@@ -611,6 +611,75 @@ select {
   gap: 2rem;
 }
 
+.tenant-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.9rem 1.2rem;
+  padding: 2rem 0 1rem;
+}
+
+.tenant-footer__link {
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 180ms ease;
+}
+
+.tenant-footer__link:hover {
+  color: var(--foreground);
+}
+
+.privacy-page {
+  display: grid;
+  place-items: start center;
+  padding: 2rem 0;
+}
+
+.privacy-card {
+  width: min(760px, 100%);
+  display: grid;
+  gap: 1.4rem;
+  padding: clamp(1.4rem, 4vw, 2.4rem);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+}
+
+.privacy-card h1,
+.privacy-card h2,
+.privacy-card p {
+  margin: 0;
+}
+
+.privacy-card h1 {
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+}
+
+.privacy-content {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.privacy-content section {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.privacy-content h2 {
+  font-size: 1.1rem;
+}
+
+.privacy-content p,
+.privacy-updated {
+  color: var(--muted);
+  line-height: 1.65;
+}
+
 @media (max-width: 960px) {
   .hero,
   .card-grid,

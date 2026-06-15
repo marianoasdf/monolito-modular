@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AppointmentBookingForm } from "./AppointmentBookingForm";
 import { BarbershopSiteProfile } from "../../../modules/barbershop/domain/entities/BarbershopSiteProfile";
 
@@ -19,6 +20,15 @@ export function BarbershopTenantView({ site }: { site: BarbershopSiteProfile }):
           whatsAppUrl={site.whatsAppUrl}
         />
       </section>
+
+      <footer className="tenant-footer">
+        <Link className="tenant-footer__link" href="/privacy">
+          Política de privacidad
+        </Link>
+        <Link className="tenant-footer__link" href="/terms">
+          Términos y condiciones
+        </Link>
+      </footer>
     </>
   );
 }

@@ -2,13 +2,19 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BarbershopTenantView } from "./[tenantSlug]/barbershop/BarbershopTenantView";
-import { isMgBarberPublicHost } from "./isMgBarberPublicHost";
+import { resolvePublicTenantByHost } from "./publicTenantHosts";
 import { buildGetBarbershopSiteProfileService } from "../modules/barbershop/infra/container/buildGetBarbershopSiteProfileService";
 
 const realTenants = [
   {
     slug: "mgbarber",
     name: "MG Barber",
+    city: "Tu barbería",
+    focus: "tenant real para operar y personalizar",
+  },
+  {
+    slug: "rufianbarbershop",
+    name: "Rufian Barbershop",
     city: "Tu barbería",
     focus: "tenant real para operar y personalizar",
   },
@@ -38,10 +44,11 @@ const demoTenants = [
 export default async function HomePage(): Promise<React.JSX.Element> {
   const headersList = await headers();
   const host = headersList.get("host");
+  const publicTenant = resolvePublicTenantByHost(host);
 
-  if (isMgBarberPublicHost(host)) {
+  if (publicTenant) {
     const service = buildGetBarbershopSiteProfileService();
-    const site = await service.execute({ tenantSlug: "mgbarber" });
+    const site = await service.execute({ tenantSlug: publicTenant.slug });
 
     if (!site) {
       notFound();
@@ -115,6 +122,26 @@ export default async function HomePage(): Promise<React.JSX.Element> {
             </div>
           </article>
         ))}
+      </section>
+
+      <section className="section-heading">
+        <div>
+          <h2>Rotisería y viandas</h2>
+          <p>Un nuevo vertical sobre la misma base modular, con su propia carta tenant-aware.</p>
+        </div>
+      </section>
+
+      <section className="card-grid">
+        <article className="feature-card">
+          <p className="eyebrow">/lafamilia/rotisserie/carta</p>
+          <h3>La Familia Rotisería y Viandas</h3>
+          <p className="muted">Carta completa de viandas y rotisería, servida desde la base de datos.</p>
+          <div className="hero-actions">
+            <Link className="button" href="/lafamilia/rotisserie/carta">
+              Ver carta
+            </Link>
+          </div>
+        </article>
       </section>
 
       <section className="section-heading">

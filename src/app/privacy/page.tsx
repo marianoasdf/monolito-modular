@@ -1,19 +1,35 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
+import { resolvePublicTenantByHost } from "../publicTenantHosts";
 
-export const metadata: Metadata = {
-  title: "Politica de privacidad | MG Barber",
-  description: "Politica de privacidad simple de MG Barber para reservas y contacto por WhatsApp.",
-};
+async function getPublicTenantName(): Promise<string> {
+  const headersList = await headers();
+  const publicTenant = resolvePublicTenantByHost(headersList.get("host"));
 
-export default function MgBarberPrivacyPage(): React.JSX.Element {
+  return publicTenant?.name || "MG Barber";
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const tenantName = await getPublicTenantName();
+
+  return {
+    title: `Politica de privacidad | ${tenantName}`,
+    description: `Politica de privacidad simple de ${tenantName} para reservas y contacto por WhatsApp.`,
+  };
+}
+
+export default async function MgBarberPrivacyPage(): Promise<React.JSX.Element> {
+  const tenantName = await getPublicTenantName();
+
   return (
     <section className="privacy-page">
       <article className="privacy-card">
-        <p className="eyebrow">MG Barber</p>
+        <p className="eyebrow">{tenantName}</p>
         <h1>Politica de privacidad</h1>
         <p className="lead">
-          En MG Barber cuidamos la informacion que nos compartis al contactarnos o reservar un turno.
+          En {tenantName} cuidamos la informacion que nos compartis al contactarnos o reservar un
+          turno.
         </p>
 
         <div className="privacy-content">
@@ -47,7 +63,7 @@ export default function MgBarberPrivacyPage(): React.JSX.Element {
             <p>
               Conservamos la informacion mientras sea necesaria para gestionar la relacion con el
               cliente. Podes pedir que dejemos de contactarte o que eliminemos tus datos escribiendo
-              por WhatsApp a MG Barber.
+              por WhatsApp a {tenantName}.
             </p>
           </section>
 
@@ -55,7 +71,7 @@ export default function MgBarberPrivacyPage(): React.JSX.Element {
             <h2>Contacto</h2>
             <p>
               Para consultas sobre esta politica o sobre tus datos personales, escribinos por
-              WhatsApp desde el sitio oficial de MG Barber.
+              WhatsApp desde el sitio oficial de {tenantName}.
             </p>
           </section>
         </div>

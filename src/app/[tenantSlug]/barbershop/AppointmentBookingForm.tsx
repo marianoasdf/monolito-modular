@@ -47,14 +47,15 @@ export function AppointmentBookingForm({
   const [selectedSlotStartsAt, setSelectedSlotStartsAt] = useState<string>("");
   const [submitState, setSubmitState] = useState<SubmitState>({ kind: "idle" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [slots, setSlots] = useState<BarbershopAgendaSlot[]>(todaySlots);
   const bookingSummaryRef = useRef<HTMLDivElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
 
   const selectedService =
     services.find((service) => service.name === selectedServiceName) ?? services[0];
-  const selectedSlot = todaySlots.find((slot) => slot.startsAt === selectedSlotStartsAt);
+  const selectedSlot = slots.find((slot) => slot.startsAt === selectedSlotStartsAt);
 
-  if (todaySlots.length === 0) {
+  if (slots.length === 0) {
     return (
       <article className="tenant-card booking-card booking-card--empty">
         <a className="button booking-whatsapp" href={whatsAppUrl} rel="noreferrer" target="_blank">
@@ -160,6 +161,13 @@ export function AppointmentBookingForm({
         appointmentId: responseBody.appointmentId,
       });
 
+      const reservedStartsAt = selectedSlot.startsAt;
+      setSlots((previousSlots) =>
+        previousSlots.map((slot) =>
+          slot.startsAt === reservedStartsAt ? { ...slot, status: "occupied" } : slot,
+        ),
+      );
+
       form.reset();
       setSelectedServiceName(services[0]?.name ?? "");
       setSelectedSlotStartsAt("");
@@ -187,7 +195,7 @@ export function AppointmentBookingForm({
         className="agenda-grid"
         aria-label="Turnos del día"
       >
-        {todaySlots.map((slot) => {
+        {slots.map((slot) => {
           const isSelected = slot.startsAt === selectedSlotStartsAt;
           const isAvailable = slot.status === "available";
           const slotVariantClass =

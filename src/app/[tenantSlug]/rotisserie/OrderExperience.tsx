@@ -1,0 +1,308 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import type { CatalogView } from "../../../modules/rotisserie/application/services/GetCatalogService";
+
+type FulfillmentType = "pickup" | "delivery";
+type PaymentMethod = "cash" | "transfer";
+
+interface OrderExperienceProps {
+  tenantSlug: string;
+  catalog: CatalogView;
+}
+
+interface ProductInfo {
+  id: string;
+  name: string;
+  priceInCents: number;
+}
+
+function formatPrice(priceInCents: number): string {
+  return new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(priceInCents / 100);
+}
+
+export function OrderExperience({ tenantSlug, catalog }: OrderExperienceProps): React.JSX.Element {
+  const router = useRouter();
+
+  const productIndex = useMemo(() => {
+    const index = new Map<string, ProductInfo>();
+    for (const category of catalog) {
+      for (const product of category.products) {
+        index.set(product.id, {
+          id: product.id,
+          name: product.name,
+          priceInCents: product.priceInCents,
+        });
+      }
+    }
+    return index;
+  }, [catalog]);
+
+  const [cart, setCart] = useState<Record<string, number>>({});
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [fulfillmentType, setFulfillmentType] = useState<FulfillmentType>("pickup");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<string[]>([]);
+
+  const cartLines = useMemo(() => {
+    return Object.entries(cart)
+      .filter(([, quantity]) => quantity > 0)
+      .map(([productId, quantity]) => {
+        const product = productIndex.get(productId);
+        return product ? { product, quantity } : null;
+      })
+      .filter((line): line is { product: ProductInfo; quantity: number } => line !== null);
+  }, [cart, productIndex]);
+
+  const totalInCents = cartLines.reduce(
+    (sum, line) => sum + line.product.priceInCents * line.quantity,
+    0,
+  );
+
+  const itemCount = cartLines.reduce((sum, line) => sum + line.quantity, 0);
+
+  function changeQuantity(productId: string, delta: number): void {
+    setCart((current) => {
+      const next = { ...current };
+      const quantity = (next[productId] ?? 0) + delta;
+      if (quantity <= 0) {
+        delete next[productId];
+      } else {
+        next[productId] = quantity;
+      }
+      return next;
+    });
+  }
+
+  async function handleSubmit(event: React.FormEvent): Promise<void> {
+    event.preventDefault();
+    setErrors([]);
+
+    if (cartLines.length === 0) {
+      setErrors(["Agregá al menos un producto al pedido."]);
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const response = await fetch("/api/rotisserie/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tenantSlug,
+          customerName,
+          customerPhone,
+          fulfillmentType,
+          deliveryAddress: fulfillmentType === "delivery" ? deliveryAddress : undefined,
+          paymentMethod,
+          notes: notes || undefined,
+          items: cartLines.map((line) => ({
+            productId: line.product.id,
+            quantity: line.quantity,
+          })),
+        }),
+      });
+
+      const data = (await response.json()) as { orderId?: string; message?: string; errors?: string[] };
+
+      if (!response.ok) {
+        setErrors(data.errors ?? [data.message ?? "No pudimos crear el pedido."]);
+        setSubmitting(false);
+        return;
+      }
+
+      router.push(`/${tenantSlug}/rotisserie/order/${data.orderId}`);
+    } catch {
+      setErrors(["Hubo un problema de conexión. Probá de nuevo."]);
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="tenant-layout">
+      <section className="agenda-shell">
+        {catalog.map((category) => (
+          <article key={category.id} className="panel" style={{ padding: "1.6rem" }}>
+            <h2 style={{ margin: "0 0 1rem", fontSize: "1.4rem", letterSpacing: "-0.02em" }}>
+              {category.name}
+            </h2>
+
+            {category.products.length === 0 ? (
+              <p className="muted">Sin productos en esta categoría.</p>
+            ) : (
+              <ul className="service-list">
+                {category.products.map((product) => {
+                  const quantity = cart[product.id] ?? 0;
+                  return (
+                    <li key={product.id}>
+                      <span style={{ display: "grid", gap: "0.15rem" }}>
+                        <strong>{product.name}</strong>
+                        {product.description ? (
+                          <span className="muted" style={{ fontSize: "0.9rem" }}>
+                            {product.description}
+                          </span>
+                        ) : null}
+                      </span>
+                      <span style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                        <span className="price">{formatPrice(product.priceInCents)}</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+                          <button
+                            type="button"
+                            className="button-secondary"
+                            style={{ minHeight: "2.4rem", padding: "0 0.9rem" }}
+                            onClick={() => changeQuantity(product.id, -1)}
+                            aria-label={`Quitar uno de ${product.name}`}
+                            disabled={quantity === 0}
+                          >
+                            −
+                          </button>
+                          <span style={{ minWidth: "1.5rem", textAlign: "center", fontWeight: 700 }}>
+                            {quantity}
+                          </span>
+                          <button
+                            type="button"
+                            className="button-secondary"
+                            style={{ minHeight: "2.4rem", padding: "0 0.9rem" }}
+                            onClick={() => changeQuantity(product.id, 1)}
+                            aria-label={`Agregar uno de ${product.name}`}
+                          >
+                            +
+                          </button>
+                        </span>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </article>
+        ))}
+      </section>
+
+      <aside className="panel" style={{ padding: "1.6rem", display: "grid", gap: "1.25rem" }}>
+        <h2 style={{ margin: 0, fontSize: "1.4rem" }}>Tu pedido</h2>
+
+        {cartLines.length === 0 ? (
+          <p className="muted">Todavía no agregaste productos. Tocá “+” en la carta.</p>
+        ) : (
+          <ul className="service-list">
+            {cartLines.map((line) => (
+              <li key={line.product.id}>
+                <span>
+                  {line.quantity}x {line.product.name}
+                </span>
+                <span className="price">
+                  {formatPrice(line.product.priceInCents * line.quantity)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="booking-summary booking-summary--selected">
+          <span>Total ({itemCount} {itemCount === 1 ? "ítem" : "ítems"})</span>
+          <strong>{formatPrice(totalInCents)}</strong>
+        </div>
+
+        <form className="booking-form" onSubmit={handleSubmit}>
+          <label className="booking-field booking-field--full">
+            <span className="muted">Nombre</span>
+            <input
+              type="text"
+              value={customerName}
+              onChange={(event) => setCustomerName(event.target.value)}
+              maxLength={120}
+              required
+            />
+          </label>
+
+          <label className="booking-field booking-field--full">
+            <span className="muted">Teléfono (WhatsApp)</span>
+            <input
+              type="tel"
+              value={customerPhone}
+              onChange={(event) => setCustomerPhone(event.target.value)}
+              placeholder="Ej: 3454 20 0683"
+              maxLength={40}
+              required
+            />
+          </label>
+
+          <label className="booking-field">
+            <span className="muted">Entrega</span>
+            <select
+              value={fulfillmentType}
+              onChange={(event) => setFulfillmentType(event.target.value as FulfillmentType)}
+            >
+              <option value="pickup">Retiro en el local</option>
+              <option value="delivery">Delivery</option>
+            </select>
+          </label>
+
+          <label className="booking-field">
+            <span className="muted">Pago</span>
+            <select
+              value={paymentMethod}
+              onChange={(event) => setPaymentMethod(event.target.value as PaymentMethod)}
+            >
+              <option value="cash">Efectivo</option>
+              <option value="transfer">Transferencia</option>
+            </select>
+          </label>
+
+          {fulfillmentType === "delivery" ? (
+            <label className="booking-field booking-field--full">
+              <span className="muted">Dirección de entrega</span>
+              <input
+                type="text"
+                value={deliveryAddress}
+                onChange={(event) => setDeliveryAddress(event.target.value)}
+                maxLength={200}
+                required
+              />
+            </label>
+          ) : null}
+
+          <label className="booking-field booking-field--full">
+            <span className="muted">Notas (opcional)</span>
+            <textarea
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              maxLength={400}
+              rows={2}
+            />
+          </label>
+
+          {errors.length > 0 ? (
+            <div className="booking-feedback booking-feedback--error booking-field--full">
+              <ul className="booking-errors">
+                {errors.map((error) => (
+                  <li key={error}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          <button
+            type="submit"
+            className="button booking-submit booking-field--full"
+            disabled={submitting || cartLines.length === 0}
+          >
+            {submitting ? "Enviando pedido..." : "Confirmar pedido"}
+          </button>
+        </form>
+      </aside>
+    </div>
+  );
+}

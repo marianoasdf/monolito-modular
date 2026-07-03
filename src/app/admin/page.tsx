@@ -1,218 +1,36 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "../../core/shared/infra/prisma/prismaClient";
-import {
-  createDefaultWeeklySchedule,
-  DEFAULT_EXPRESS_BOOKING_SLOTS,
-  resolveExpressSlots,
-  resolveWeeklySchedule,
-  WEEKDAY_FIELDS,
-} from "../../modules/barbershop/infra/settings/barbershopTenantSettings";
-import { cancelAppointmentAction, loginAdminAction, logoutAdminAction, saveAdminSettingsAction } from "./actions";
-import { isAdminAuthenticated } from "./auth";
+import { resolvePublicTenantByHost } from "../publicTenantHosts";
+import { AdminPanel } from "./AdminPanel";
 
-function getMessage(error: string | undefined): string | null {
-  if (error === "invalid-password") {
-    return "Clave incorrecta.";
-  }
-
-  if (error === "phone") {
-    return "El celular admin no es valido.";
-  }
-
-  if (error === "tenant") {
-    return "No se encontro el tenant mgbarber.";
-  }
-
-  if (error === "auth") {
-    return "Volve a iniciar sesion.";
-  }
-
-  return null;
-}
-
-export default async function AdminPage({
+export default async function AdminIndexPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }): Promise<React.JSX.Element> {
-  const query = await searchParams;
-  const error = Array.isArray(query.error) ? query.error[0] : query.error;
-  const saved = Array.isArray(query.saved) ? query.saved[0] : query.saved;
-  const authenticated = await isAdminAuthenticated();
-  const message = getMessage(error);
-
-  if (!authenticated) {
-    return (
-      <section className="admin-shell">
-        <article className="tenant-card admin-card admin-card--compact">
-          <p className="eyebrow">Admin MG Barber</p>
-          <h1 className="display-title admin-title">Entrar</h1>
-          <p className="lead admin-lead">Usa esta pantalla para cambiar nombre, horarios, WhatsApp y anticipacion.</p>
-
-          {message ? <div className="booking-feedback booking-feedback--error"><strong>{message}</strong></div> : null}
-          {process.env.NODE_ENV !== "production" ? (
-            <div className="booking-feedback booking-feedback--success">
-              <strong>Clave local: admin-local</strong>
-            </div>
-          ) : null}
-
-          <form action={loginAdminAction} className="admin-login-form">
-            <label className="booking-field booking-field--full">
-              <span className="sr-only">Clave admin</span>
-              <input name="password" placeholder="Clave admin" required type="password" />
-            </label>
-            <button className="button booking-submit" type="submit">
-              Entrar al panel
-            </button>
-          </form>
-        </article>
-      </section>
-    );
+  // En local no hay dominio que identifique al tenant: usamos la ruta explícita.
+  if (process.env.NODE_ENV !== "production") {
+    redirect("/mgbarber/barbershop/admin");
   }
 
+  // En prod el host identifica al negocio (mgbarber.xyz -> mgbarber), así que
+  // /admin es el atajo limpio y único. Si el host no resuelve, caemos a mgbarber
+  // para preservar el comportamiento previo (nunca redirigimos: evita loops).
+  const headersList = await headers();
+  const host = headersList.get("host");
+  const publicTenant = resolvePublicTenantByHost(host);
+  const slug = publicTenant?.slug ?? "mgbarber";
+
   const tenant = await prisma.tenant.findUnique({
-    where: { slug: "mgbarber" },
+    where: { slug },
     include: { settings: true },
   });
 
-  if (!tenant) {
+  if (!tenant || !tenant.settings) {
     notFound();
   }
 
-  const weeklySchedule = tenant.settings?.weeklySchedule
-    ? resolveWeeklySchedule(tenant.settings.weeklySchedule)
-    : createDefaultWeeklySchedule();
-  const expressSlots = tenant.settings?.expressSlots
-    ? resolveExpressSlots(tenant.settings.expressSlots)
-    : [...DEFAULT_EXPRESS_BOOKING_SLOTS];
-
-  const appointments = await prisma.barbershopAppointment.findMany({
-    where: {
-      tenantId: tenant.id,
-      status: "SCHEDULED",
-      startsAt: {
-        gte: new Date(),
-      },
-    },
-    include: {
-      customer: true,
-    },
-    orderBy: {
-      startsAt: "asc",
-    },
-  });
-
-  return (
-    <section className="admin-shell">
-      <article className="tenant-card admin-card">
-        <div className="admin-topbar">
-          <div>
-            <p className="eyebrow">Admin MG Barber</p>
-            <h1 className="display-title admin-title">Panel rapido</h1>
-          </div>
-
-          <div className="admin-actions">
-            <Link className="button-secondary" href="/mgbarber/barbershop">
-              Ver sitio
-            </Link>
-            <form action={logoutAdminAction}>
-              <button className="button" type="submit">
-                Salir
-              </button>
-            </form>
-          </div>
-        </div>
-
-        {message ? <div className="booking-feedback booking-feedback--error"><strong>{message}</strong></div> : null}
-        {saved === "1" ? (
-          <div className="booking-feedback booking-feedback--success">
-            <strong>Cambios guardados.</strong>
-          </div>
-        ) : null}
-
-        <form action={saveAdminSettingsAction} className="admin-form">
-          <input name="tenantSlug" type="hidden" value="mgbarber" />
-
-          <div className="admin-grid">
-            <label className="booking-field">
-              <span>Nombre publico</span>
-              <input defaultValue={tenant.settings?.publicName ?? tenant.name} name="publicName" required type="text" />
-            </label>
-
-            <label className="booking-field">
-              <span>WhatsApp</span>
-              <input defaultValue={tenant.settings?.phone ?? "+5493454200683"} name="phone" required type="tel" />
-            </label>
-
-            <label className="booking-field booking-field--full">
-              <span>Texto corto</span>
-              <input
-                defaultValue={tenant.settings?.description ?? "Toca un cuadrado verde y listo."}
-                maxLength={120}
-                name="description"
-                required
-                type="text"
-              />
-            </label>
-
-            <label className="booking-field booking-field--full">
-              <span>Horarios con 30 minutos de anticipacion</span>
-              <input defaultValue={expressSlots.join(", ")} name="expressSlots" placeholder="13:00, 19:00" type="text" />
-            </label>
-          </div>
-
-          <section className="admin-schedule-grid">
-            {WEEKDAY_FIELDS.map(({ fieldName, label, weekday }) => (
-              <label key={fieldName} className="booking-field admin-day-field">
-                <span>{label}</span>
-                <textarea
-                  defaultValue={(weeklySchedule[weekday] ?? []).join(", ")}
-                  name={fieldName}
-                  placeholder="10:00, 11:00, 12:00"
-                  rows={3}
-                />
-              </label>
-            ))}
-          </section>
-
-          <div className="booking-summary booking-field--full">
-            <strong>Resto de horarios</strong>
-            <span>piden 1 hora de anticipacion</span>
-          </div>
-
-          <button className="button booking-submit" type="submit">
-            Guardar cambios
-          </button>
-        </form>
-
-        <section className="admin-appointments">
-          <h2 className="admin-section-title">Reservas activas ({appointments.length})</h2>
-          {appointments.length === 0 ? (
-            <p className="admin-empty-state">No hay reservas activas</p>
-          ) : (
-            <div className="admin-appointments-list">
-              {appointments.map((appointment) => (
-                <div key={appointment.id} className="admin-appointment-card">
-                  <div className="admin-appointment-info">
-                    <strong>{appointment.customer.fullName}</strong>
-                    <span>{appointment.customer.phoneNumber}</span>
-                    <span>{new Date(appointment.startsAt).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", timeZone: "America/Argentina/Buenos_Aires" })} {new Date(appointment.startsAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "America/Argentina/Buenos_Aires" })}</span>
-                    <span>{appointment.serviceCode}</span>
-                  </div>
-                  <form action={cancelAppointmentAction}>
-                    <input name="appointmentId" type="hidden" value={appointment.id} />
-                    <input name="tenantId" type="hidden" value={tenant.id} />
-                    <button className="button admin-cancel-btn" type="submit">
-                      Cancelar
-                    </button>
-                  </form>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      </article>
-    </section>
-  );
+  const query = await searchParams;
+  return <AdminPanel tenantSlug={slug} basePath="/admin" query={query} />;
 }

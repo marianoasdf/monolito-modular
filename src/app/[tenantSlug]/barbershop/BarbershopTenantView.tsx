@@ -7,8 +7,18 @@ export function BarbershopTenantView({ site }: { site: BarbershopSiteProfile }):
     <>
       <section className="agenda-shell">
         <article className="agenda-intro">
-          <p className="eyebrow">{site.todayLabel}</p>
           <h1 className="display-title">{site.name}</h1>
+          {site.description ? <p className="lead">{site.description}</p> : null}
+          {site.mapsUrl ? (
+            <a
+              className="button-secondary"
+              href={site.mapsUrl}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Cómo llegar
+            </a>
+          ) : null}
         </article>
 
         <AppointmentBookingForm

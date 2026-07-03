@@ -24,6 +24,9 @@ model Tenant {
   settings     BarbershopTenantSettings?
   auth         TenantAuth?
   integrations TenantIntegration[]
+  rotisserieCategories RotisserieCategory[]
+  rotisserieProducts   RotisserieProduct[]
+  rotisserieOrders     RotisserieOrder[]
 
   @@map("tenants")
 }
@@ -33,6 +36,7 @@ model BarbershopTenantSettings {
   tenantId       String   @unique
   publicName     String?
   description    String?
+  mapsUrl        String?
   phone          String?
   weeklySchedule Json?
   expressSlots   Json?
@@ -106,4 +110,75 @@ model TenantIntegration {
   @@unique([tenantId, provider])
   @@index([tenantId])
   @@map("tenant_integrations")
+}
+
+model RotisserieCategory {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant    Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products  RotisserieProduct[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId])
+  @@map("rotisserie_categories")
+}
+
+model RotisserieProduct {
+  id           String   @id @default(cuid())
+  tenantId     String
+  categoryId   String
+  name         String
+  description  String?
+  priceInCents Int
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  tenant       Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category     RotisserieCategory @relation(fields: [tenantId, categoryId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, id])
+  @@index([tenantId])
+  @@index([tenantId, categoryId])
+  @@map("rotisserie_products")
+}
+
+model RotisserieOrder {
+  id              String   @id @default(cuid())
+  tenantId        String
+  customerName    String
+  customerPhone   String
+  fulfillmentType String
+  deliveryAddress String?
+  paymentMethod   String
+  status          String   @default("pending")
+  totalInCents    Int
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  tenant          Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  items           RotisserieOrderItem[]
+
+  @@index([tenantId])
+  @@index([tenantId, createdAt])
+  @@map("rotisserie_orders")
+}
+
+model RotisserieOrderItem {
+  id               String   @id @default(cuid())
+  orderId          String
+  tenantId         String
+  productId        String
+  productName      String
+  unitPriceInCents Int
+  quantity         Int
+  lineTotalInCents Int
+  createdAt        DateTime @default(now())
+  order            RotisserieOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, orderId])
+  @@map("rotisserie_order_items")
 }

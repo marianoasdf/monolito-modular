@@ -2,11 +2,18 @@ import { cookies } from "next/headers";
 import { prisma } from "../../core/shared/infra/prisma/prismaClient";
 import bcrypt from "bcryptjs";
 
-const ADMIN_SESSION_COOKIE_NAME = "mgbarber_admin_session";
+// Sesión de admin aislada por tenant: cada barbería tiene su propia cookie,
+// así un admin logueado en un tenant no obtiene acceso a otro.
+function sessionCookieName(tenantSlug: string): string {
+  return `admin_session_${tenantSlug}`;
+}
 
-export async function validateAdminPassword(password: string): Promise<boolean> {
+export async function validateAdminPassword(
+  tenantSlug: string,
+  password: string,
+): Promise<boolean> {
   const tenant = await prisma.tenant.findUnique({
-    where: { slug: "mgbarber" },
+    where: { slug: tenantSlug },
   });
 
   if (!tenant) {
@@ -30,14 +37,14 @@ export async function validateAdminPassword(password: string): Promise<boolean> 
   return await bcrypt.compare(password, auth.adminPasswordHash);
 }
 
-export async function isAdminAuthenticated(): Promise<boolean> {
+export async function isAdminAuthenticated(tenantSlug: string): Promise<boolean> {
   const cookieStore = await cookies();
-  return cookieStore.get(ADMIN_SESSION_COOKIE_NAME)?.value === "ok";
+  return cookieStore.get(sessionCookieName(tenantSlug))?.value === "ok";
 }
 
-export async function setAdminAuthenticated(): Promise<void> {
+export async function setAdminAuthenticated(tenantSlug: string): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.set(ADMIN_SESSION_COOKIE_NAME, "ok", {
+  cookieStore.set(sessionCookieName(tenantSlug), "ok", {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -46,7 +53,7 @@ export async function setAdminAuthenticated(): Promise<void> {
   });
 }
 
-export async function clearAdminAuthenticated(): Promise<void> {
+export async function clearAdminAuthenticated(tenantSlug: string): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.delete(ADMIN_SESSION_COOKIE_NAME);
+  cookieStore.delete(sessionCookieName(tenantSlug));
 }

@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
-import { isMgBarberPublicHost } from "../../isMgBarberPublicHost";
+import { resolvePublicTenantByHost } from "../../publicTenantHosts";
 import { buildGetBarbershopSiteProfileService } from "../../../modules/barbershop/infra/container/buildGetBarbershopSiteProfileService";
 import { BarbershopTenantView } from "./BarbershopTenantView";
 
@@ -12,8 +12,9 @@ export default async function BarbershopTenantPage({
   const { tenantSlug } = await params;
   const headersList = await headers();
   const host = headersList.get("host");
+  const publicTenant = resolvePublicTenantByHost(host);
 
-  if (tenantSlug === "mgbarber" && isMgBarberPublicHost(host)) {
+  if (publicTenant?.slug === tenantSlug) {
     redirect("/");
   }
 

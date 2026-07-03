@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { PUBLIC_TENANT_HOSTS, isPublicTenantHost } from "./publicTenantHosts";
 
 interface ShellProps {
   children: React.ReactNode;
@@ -9,16 +10,16 @@ interface ShellProps {
 
 export function Shell({ children }: ShellProps): React.JSX.Element {
   const pathname = usePathname();
-  const isMgBarberPath = pathname?.startsWith("/mgbarber") ?? false;
+  const isPublicTenantPath =
+    PUBLIC_TENANT_HOSTS.some((tenant) => pathname?.startsWith(`/${tenant.slug}`)) ?? false;
   const isLegalPath = pathname?.startsWith("/privacy") || pathname?.startsWith("/terms") || false;
-  const isMgBarberDomain = typeof window !== "undefined" && 
-    (window.location.hostname === "mgbarber.xyz" || 
-     window.location.hostname === "www.mgbarber.xyz");
-  const isMgBarber = isMgBarberPath || isLegalPath || isMgBarberDomain;
+  const isPublicTenantDomain =
+    typeof window !== "undefined" && isPublicTenantHost(window.location.hostname);
+  const isPublicTenant = isPublicTenantPath || isLegalPath || isPublicTenantDomain;
 
   return (
     <div className="shell">
-      {!isMgBarber && (
+      {!isPublicTenant && (
         <header className="site-header">
           <div className="site-header__inner">
             <Link className="brand" href="/">
@@ -34,7 +35,7 @@ export function Shell({ children }: ShellProps): React.JSX.Element {
         </header>
       )}
       <main className="site-main">{children}</main>
-      {!isMgBarber && (
+      {!isPublicTenant && (
         <footer className="site-footer">
           <div className="site-footer__inner">
             <span>Next.js App Router + arquitectura modular</span>

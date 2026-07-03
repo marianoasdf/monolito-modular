@@ -1,19 +1,34 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
+import { resolvePublicTenantByHost } from "../publicTenantHosts";
 
-export const metadata: Metadata = {
-  title: "Terminos y condiciones | MG Barber",
-  description: "Terminos y condiciones simples de MG Barber para reservas y atencion.",
-};
+async function getPublicTenantName(): Promise<string> {
+  const headersList = await headers();
+  const publicTenant = resolvePublicTenantByHost(headersList.get("host"));
 
-export default function MgBarberTermsPage(): React.JSX.Element {
+  return publicTenant?.name || "MG Barber";
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const tenantName = await getPublicTenantName();
+
+  return {
+    title: `Terminos y condiciones | ${tenantName}`,
+    description: `Terminos y condiciones simples de ${tenantName} para reservas y atencion.`,
+  };
+}
+
+export default async function MgBarberTermsPage(): Promise<React.JSX.Element> {
+  const tenantName = await getPublicTenantName();
+
   return (
     <section className="privacy-page">
       <article className="privacy-card">
-        <p className="eyebrow">MG Barber</p>
+        <p className="eyebrow">{tenantName}</p>
         <h1>Terminos y condiciones</h1>
         <p className="lead">
-          Estos terminos regulan el uso del sitio de MG Barber y la solicitud de turnos por canales
+          Estos terminos regulan el uso del sitio de {tenantName} y la solicitud de turnos por canales
           digitales.
         </p>
 
@@ -21,7 +36,7 @@ export default function MgBarberTermsPage(): React.JSX.Element {
           <section>
             <h2>Reservas</h2>
             <p>
-              Las reservas quedan sujetas a disponibilidad. MG Barber puede confirmar, reprogramar o
+              Las reservas quedan sujetas a disponibilidad. {tenantName} puede confirmar, reprogramar o
               cancelar un turno cuando sea necesario por razones operativas.
             </p>
           </section>
@@ -45,9 +60,9 @@ export default function MgBarberTermsPage(): React.JSX.Element {
           <section>
             <h2>Uso del sitio</h2>
             <p>
-              El sitio debe usarse solo para consultar informacion y solicitar turnos reales. MG
-              Barber puede bloquear solicitudes abusivas, falsas o que afecten el funcionamiento del
-              servicio.
+              El sitio debe usarse solo para consultar informacion y solicitar turnos reales.{" "}
+              {tenantName} puede bloquear solicitudes abusivas, falsas o que afecten el
+              funcionamiento del servicio.
             </p>
           </section>
 
@@ -55,7 +70,7 @@ export default function MgBarberTermsPage(): React.JSX.Element {
             <h2>Contacto</h2>
             <p>
               Para consultas sobre estos terminos, reservas o cambios de turno, escribinos por
-              WhatsApp desde el sitio oficial de MG Barber.
+              WhatsApp desde el sitio oficial de {tenantName}.
             </p>
           </section>
         </div>

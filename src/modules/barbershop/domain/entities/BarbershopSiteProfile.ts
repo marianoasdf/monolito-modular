@@ -17,6 +17,7 @@ export interface BarbershopSiteProfile {
   name: string;
   tagline: string;
   description: string;
+  mapsUrl: string | null;
   city: string;
   neighborhood: string;
   specialty: string;

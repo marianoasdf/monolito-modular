@@ -16,38 +16,60 @@ import {
   validateAdminPassword,
 } from "./auth";
 
-export async function loginAdminAction(formData: FormData): Promise<void> {
-  const password = `${formData.get("password") || ""}`;
-  const isValid = await validateAdminPassword(password);
+function resolveBasePath(formData: FormData): string {
+  const raw = `${formData.get("basePath") || ""}`.trim();
 
-  if (!isValid) {
-    redirect("/admin?error=invalid-password");
+  // Evita open redirects: solo rutas internas absolutas.
+  if (raw.startsWith("/") && !raw.startsWith("//")) {
+    return raw;
   }
 
-  await setAdminAuthenticated();
-  redirect("/admin");
+  return "/admin";
 }
 
-export async function logoutAdminAction(): Promise<void> {
-  await clearAdminAuthenticated();
-  redirect("/admin");
+function resolveTenantSlug(formData: FormData): string {
+  const raw = `${formData.get("tenantSlug") || ""}`.trim();
+  return raw || "mgbarber";
+}
+
+export async function loginAdminAction(formData: FormData): Promise<void> {
+  const basePath = resolveBasePath(formData);
+  const tenantSlug = resolveTenantSlug(formData);
+  const password = `${formData.get("password") || ""}`;
+  const isValid = await validateAdminPassword(tenantSlug, password);
+
+  if (!isValid) {
+    redirect(`${basePath}?error=invalid-password`);
+  }
+
+  await setAdminAuthenticated(tenantSlug);
+  redirect(basePath);
+}
+
+export async function logoutAdminAction(formData: FormData): Promise<void> {
+  const basePath = resolveBasePath(formData);
+  const tenantSlug = resolveTenantSlug(formData);
+  await clearAdminAuthenticated(tenantSlug);
+  redirect(basePath);
 }
 
 export async function saveAdminSettingsAction(formData: FormData): Promise<void> {
-  const authenticated = await isAdminAuthenticated();
+  const basePath = resolveBasePath(formData);
+  const tenantSlug = resolveTenantSlug(formData);
+  const authenticated = await isAdminAuthenticated(tenantSlug);
 
   if (!authenticated) {
-    redirect("/admin?error=auth");
+    redirect(`${basePath}?error=auth`);
   }
 
-  const tenantSlug = `${formData.get("tenantSlug") || "mgbarber"}`;
   const publicName = `${formData.get("publicName") || ""}`.trim();
   const description = `${formData.get("description") || ""}`.trim();
+  const mapsUrl = `${formData.get("mapsUrl") || ""}`.trim();
   const phoneInput = `${formData.get("phone") || ""}`.trim();
   const normalizedPhone = normalizeBarbershopPhoneNumber(phoneInput);
 
   if (!normalizedPhone) {
-    redirect("/admin?error=phone");
+    redirect(`${basePath}?error=phone`);
   }
 
   const tenant = await prisma.tenant.findUnique({
@@ -56,7 +78,7 @@ export async function saveAdminSettingsAction(formData: FormData): Promise<void>
   });
 
   if (!tenant) {
-    redirect("/admin?error=tenant");
+    redirect(`${basePath}?error=tenant`);
   }
 
   const weeklySchedule = createDefaultWeeklySchedule();
@@ -67,11 +89,14 @@ export async function saveAdminSettingsAction(formData: FormData): Promise<void>
 
   const expressSlots = parseTimeList(`${formData.get("expressSlots") || ""}`);
 
+  const normalizedMapsUrl = /^https?:\/\//i.test(mapsUrl) ? mapsUrl : null;
+
   await prisma.barbershopTenantSettings.upsert({
     where: { tenantId: tenant.id },
     update: {
       publicName: publicName || null,
       description: description || null,
+      mapsUrl: normalizedMapsUrl,
       phone: normalizedPhone,
       weeklySchedule,
       expressSlots,
@@ -80,6 +105,7 @@ export async function saveAdminSettingsAction(formData: FormData): Promise<void>
       tenantId: tenant.id,
       publicName: publicName || null,
       description: description || null,
+      mapsUrl: normalizedMapsUrl,
       phone: normalizedPhone,
       weeklySchedule,
       expressSlots,
@@ -87,23 +113,25 @@ export async function saveAdminSettingsAction(formData: FormData): Promise<void>
   });
 
   revalidatePath("/");
-  revalidatePath("/mgbarber/barbershop");
-  revalidatePath("/admin");
-  redirect("/admin?saved=1");
+  revalidatePath(`/${tenantSlug}/barbershop`);
+  revalidatePath(basePath);
+  redirect(`${basePath}?saved=1`);
 }
 
 export async function cancelAppointmentAction(formData: FormData): Promise<void> {
-  const authenticated = await isAdminAuthenticated();
+  const basePath = resolveBasePath(formData);
+  const tenantSlug = resolveTenantSlug(formData);
+  const authenticated = await isAdminAuthenticated(tenantSlug);
 
   if (!authenticated) {
-    redirect("/admin?error=auth");
+    redirect(`${basePath}?error=auth`);
   }
 
   const appointmentId = `${formData.get("appointmentId") || ""}`;
   const tenantId = `${formData.get("tenantId") || ""}`;
 
   if (!appointmentId || !tenantId) {
-    redirect("/admin");
+    redirect(basePath);
   }
 
   await prisma.barbershopAppointment.deleteMany({
@@ -114,7 +142,7 @@ export async function cancelAppointmentAction(formData: FormData): Promise<void>
   });
 
   revalidatePath("/");
-  revalidatePath("/mgbarber/barbershop");
-  revalidatePath("/admin");
-  redirect("/admin");
+  revalidatePath(`/${tenantSlug}/barbershop`);
+  revalidatePath(basePath);
+  redirect(basePath);
 }

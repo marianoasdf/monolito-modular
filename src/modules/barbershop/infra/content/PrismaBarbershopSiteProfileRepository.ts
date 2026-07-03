@@ -116,6 +116,7 @@ interface BarbershopTenantSettingsRecord {
   expressSlots: Prisma.JsonValue | null;
   publicName: string | null;
   description: string | null;
+  mapsUrl: string | null;
 }
 
 export class PrismaBarbershopSiteProfileRepository
@@ -154,7 +155,8 @@ export class PrismaBarbershopSiteProfileRepository
         "weeklySchedule" AS "weeklySchedule",
         "expressSlots" AS "expressSlots",
         "publicName" AS "publicName",
-        description
+        description,
+        "mapsUrl" AS "mapsUrl"
       FROM barbershop_tenant_settings
       WHERE "tenantId" = ${tenant.id}
       LIMIT 1
@@ -168,7 +170,8 @@ export class PrismaBarbershopSiteProfileRepository
     const weeklySchedule = resolveWeeklySchedule(settings?.weeklySchedule);
     const expressBookingSlots = resolveExpressSlots(settings?.expressSlots);
     const publicName = settings?.publicName?.trim() || tenant.name;
-    const description = settings?.description?.trim() || "Toca un cuadrado verde y listo.";
+    const description = settings?.description?.trim() || "";
+    const mapsUrl = settings?.mapsUrl?.trim() || null;
     const todaySlots = buildTodaySlots({
       appointments: tenant.appointments,
       expressBookingSlots,
@@ -182,6 +185,7 @@ export class PrismaBarbershopSiteProfileRepository
       name: publicName,
       tagline: "Autoagenda rápida",
       description,
+      mapsUrl,
       city: "Tu zona",
       neighborhood: "Atención por turnos",
       specialty: "cortes del día",

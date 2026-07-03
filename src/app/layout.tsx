@@ -2,14 +2,15 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
 import { Shell } from "./Shell";
+import { resolvePublicTenantByHost } from "./publicTenantHosts";
 
 export async function generateMetadata(): Promise<Metadata> {
   const headersList = await headers();
   const host = headersList.get("host") || "";
-  const isMgBarber = host === "mgbarber.xyz" || host === "www.mgbarber.xyz";
+  const publicTenant = resolvePublicTenantByHost(host);
 
   return {
-    title: isMgBarber ? "mgbarber | reservas" : "Multi-SaaS Modular Monolith",
+    title: publicTenant ? `${publicTenant.name} | reservas` : "Multi-SaaS Modular Monolith",
     description: "Base Next.js tenant-aware para una barbería multi-SaaS modular.",
   };
 }

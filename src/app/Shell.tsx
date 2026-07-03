@@ -2,20 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PUBLIC_TENANT_HOSTS, isPublicTenantHost } from "./publicTenantHosts";
+import { PUBLIC_TENANT_HOSTS } from "./publicTenantHosts";
 
 interface ShellProps {
   children: React.ReactNode;
+  /** Resuelto en el servidor desde el Host header; evita flash de navbar en dominios tenant. */
+  isPublicTenantHost?: boolean;
 }
 
-export function Shell({ children }: ShellProps): React.JSX.Element {
+export function Shell({ children, isPublicTenantHost = false }: ShellProps): React.JSX.Element {
   const pathname = usePathname();
   const isPublicTenantPath =
     PUBLIC_TENANT_HOSTS.some((tenant) => pathname?.startsWith(`/${tenant.slug}`)) ?? false;
   const isLegalPath = pathname?.startsWith("/privacy") || pathname?.startsWith("/terms") || false;
-  const isPublicTenantDomain =
-    typeof window !== "undefined" && isPublicTenantHost(window.location.hostname);
-  const isPublicTenant = isPublicTenantPath || isLegalPath || isPublicTenantDomain;
+  const isPublicTenant = isPublicTenantPath || isLegalPath || isPublicTenantHost;
 
   return (
     <div className="shell">

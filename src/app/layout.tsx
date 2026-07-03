@@ -20,10 +20,14 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>): Promise<React.JSX.Element> {
+  const headersList = await headers();
+  const host = headersList.get("host");
+  const isPublicTenantHost = resolvePublicTenantByHost(host) !== null;
+
   return (
     <html lang="es">
       <body>
-        <Shell>{children}</Shell>
+        <Shell isPublicTenantHost={isPublicTenantHost}>{children}</Shell>
       </body>
     </html>
   );

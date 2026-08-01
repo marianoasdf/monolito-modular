@@ -5,7 +5,7 @@ import { CreateBarbershopAppointmentService } from "../../application/services/C
 import { CreateBarbershopAppointmentController } from "../../interface/http/controllers/CreateBarbershopAppointmentController";
 import { PrismaBarbershopCustomerRepository } from "../persistence/repositories/PrismaBarbershopCustomerRepository";
 import { PrismaBarbershopAppointmentRepository } from "../persistence/repositories/PrismaBarbershopAppointmentRepository";
-import { isWhatsAppConfig } from "../../../integrations/types";
+import { isWhatsAppConfig, resolveRecipientPhones } from "../../../integrations/types";
 
 export async function buildCreateBarbershopAppointmentController(
   tenantId: string,
@@ -34,7 +34,7 @@ export async function buildCreateBarbershopAppointmentController(
     notificationSender = new WebhookNotificationSender(
       config.phoneNumberId,
       apiToken,
-      config.recipientPhone,
+      resolveRecipientPhones(config)[0] ?? "",
     );
   }
 

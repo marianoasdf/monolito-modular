@@ -100,19 +100,26 @@ export class CreateOrderService implements UseCase<CreateOrderCommand, { orderId
         .map((item) => `${item.quantity}x ${item.productName}`)
         .join(", ");
 
+      const totalFormatted = formatArs(orderProps.totalInCents);
+      const fulfillmentType = orderProps.fulfillmentType === "delivery" ? "Delivery" : "Retiro";
+      const paymentMethod = orderProps.paymentMethod === "cash" ? "Efectivo" : "Transferencia";
+
       await this.notificationSender.send({
         tenantId: command.tenantId,
         recipient: orderProps.customerPhone,
         subject: "Nuevo pedido",
         body:
           `Pedido de ${orderProps.customerName} (${orderProps.customerPhone}). ` +
-          `${orderProps.fulfillmentType === "delivery" ? "Delivery" : "Retiro"} · ` +
-          `Pago: ${orderProps.paymentMethod === "cash" ? "efectivo" : "transferencia"}. ` +
-          `Items: ${itemsSummary}. Total: ${formatArs(orderProps.totalInCents)}.`,
+          `${fulfillmentType} · Pago: ${paymentMethod}. ` +
+          `Items: ${itemsSummary}. Total: ${totalFormatted}.`,
         metadata: {
           customerName: orderProps.customerName,
           customerPhoneNumber: orderProps.customerPhone,
           notes: orderProps.notes,
+          itemsSummary,
+          totalFormatted,
+          fulfillmentType,
+          paymentMethod,
         },
       });
     } catch (error) {

@@ -20,6 +20,11 @@ export const PUBLIC_TENANT_HOSTS: PublicTenantHost[] = [
     name: "La Familia Rotisería y Viandas",
     hosts: [],
   },
+  {
+    slug: "yoni247",
+    name: "Yoni 24/7",
+    hosts: ["yoni24hs.com", "www.yoni24hs.com"],
+  },
 ];
 
 export function normalizePublicHost(host: string | null): string | null {

@@ -74,7 +74,7 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  const controller = buildCreateOrderController(tenant.tenantId);
+  const controller = await buildCreateOrderController(tenant.tenantId);
   const response = await controller.handle(validation.data);
 
   return Response.json(response.body, {

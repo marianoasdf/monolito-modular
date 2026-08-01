@@ -246,6 +246,93 @@ async function seedRotisserie() {
   }
 }
 
+const yoni247Tenant = {
+  id: "tenant_yoni247_001",
+  slug: "yoni247",
+  name: "Yoni 24/7",
+};
+
+// Carta relevada jul 2026 (precios en centavos de ARS). El cliente avisó que están desactualizados.
+const yoni247Catalog = [
+  {
+    id: "rotcat_yoni247_pizzas",
+    name: "Pizzas",
+    sortOrder: 1,
+    products: [
+      { id: "rotprod_yoni247_pizza_muzza", name: "Pizza muzza", priceInCents: 750000, sortOrder: 1 },
+      { id: "rotprod_yoni247_pizza_napolitana", name: "Pizza napolitana", priceInCents: 1200000, sortOrder: 2 },
+      { id: "rotprod_yoni247_pizza_primavera", name: "Pizza primavera", priceInCents: 1200000, sortOrder: 3 },
+      { id: "rotprod_yoni247_pizza_caballo", name: "Pizza caballo", priceInCents: 1500000, sortOrder: 4 },
+      { id: "rotprod_yoni247_pizza_calabaza", name: "Pizza calabaza", priceInCents: 1400000, sortOrder: 5 },
+      { id: "rotprod_yoni247_pizza_jamon_morron", name: "Pizza jamón morrón", priceInCents: 1400000, sortOrder: 6 },
+    ],
+  },
+  {
+    id: "rotcat_yoni247_hamb_milas",
+    name: "Hamburguesas y Milanesas",
+    sortOrder: 2,
+    products: [
+      { id: "rotprod_yoni247_hamb_completa", name: "Hamburguesa completa", description: "Sale con papas.", priceInCents: 750000, sortOrder: 1 },
+      { id: "rotprod_yoni247_sandwid_mila_completa", name: "Sandwid Mila completa", description: "Sale con papas.", priceInCents: 950000, sortOrder: 2 },
+      { id: "rotprod_yoni247_mila_napo", name: "Mila Napo", description: "Sale con papas.", priceInCents: 1000000, sortOrder: 3 },
+      { id: "rotprod_yoni247_primo_muzza", name: "Primo muzza", description: "Sale con papas.", priceInCents: 1400000, sortOrder: 4 },
+      { id: "rotprod_yoni247_mila_napo_dos", name: "Mila Napo para dos", priceInCents: 1500000, sortOrder: 5 },
+    ],
+  },
+  {
+    id: "rotcat_yoni247_papas",
+    name: "Papas",
+    sortOrder: 3,
+    products: [
+      { id: "rotprod_yoni247_bandeja_papas", name: "Bandeja de papas", priceInCents: 750000, sortOrder: 1 },
+      { id: "rotprod_yoni247_bandeja_papas_cheddar", name: "Bandeja papas con cheddar", priceInCents: 900000, sortOrder: 2 },
+      { id: "rotprod_yoni247_bandeja_papas_panceta", name: "Bandeja papas panceta verdeo cheddar", priceInCents: 1300000, sortOrder: 3 },
+      { id: "rotprod_yoni247_salchipapas", name: "Bandeja de salchipapas", priceInCents: 1200000, sortOrder: 4 },
+    ],
+  },
+];
+
+async function seedYoni247() {
+  await prisma.tenant.upsert({
+    where: { slug: yoni247Tenant.slug },
+    update: {},
+    create: {
+      id: yoni247Tenant.id,
+      slug: yoni247Tenant.slug,
+      name: yoni247Tenant.name,
+    },
+  });
+
+  for (const category of yoni247Catalog) {
+    await prisma.rotisserieCategory.upsert({
+      where: { id: category.id },
+      update: {},
+      create: {
+        id: category.id,
+        tenantId: yoni247Tenant.id,
+        name: category.name,
+        sortOrder: category.sortOrder,
+      },
+    });
+
+    for (const product of category.products) {
+      await prisma.rotisserieProduct.upsert({
+        where: { id: product.id },
+        update: {},
+        create: {
+          id: product.id,
+          tenantId: yoni247Tenant.id,
+          categoryId: category.id,
+          name: product.name,
+          description: product.description,
+          priceInCents: product.priceInCents,
+          sortOrder: product.sortOrder,
+        },
+      });
+    }
+  }
+}
+
 async function main() {
   for (const tenant of tenants) {
     await prisma.tenant.upsert({
@@ -306,6 +393,7 @@ async function main() {
   }
 
   await seedRotisserie();
+  await seedYoni247();
 }
 
 main()

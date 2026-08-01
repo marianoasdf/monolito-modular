@@ -165,7 +165,7 @@ export class PrismaBarbershopSiteProfileRepository
 
     const phone = settings?.phone;
     if (!phone) {
-      throw new Error(`Tenant ${tenant.slug} no tiene teléfono configurado. Configúralo en BarbershopTenantSettings.phone`);
+      return null;
     }
     const weeklySchedule = resolveWeeklySchedule(settings?.weeklySchedule);
     const expressBookingSlots = resolveExpressSlots(settings?.expressSlots);

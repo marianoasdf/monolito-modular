@@ -9,6 +9,10 @@ export interface NotificationMessage {
     serviceName?: string;
     startsAtIso?: string;
     notes?: string;
+    itemsSummary?: string;
+    totalFormatted?: string;
+    fulfillmentType?: string;
+    paymentMethod?: string;
   };
 }
 

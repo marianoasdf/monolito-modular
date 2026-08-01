@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { BarbershopTenantView } from "./[tenantSlug]/barbershop/BarbershopTenantView";
 import { resolvePublicTenantByHost } from "./publicTenantHosts";
 import { buildGetBarbershopSiteProfileService } from "../modules/barbershop/infra/container/buildGetBarbershopSiteProfileService";
@@ -51,7 +51,7 @@ export default async function HomePage(): Promise<React.JSX.Element> {
     const site = await service.execute({ tenantSlug: publicTenant.slug });
 
     if (!site) {
-      notFound();
+      redirect(`/${publicTenant.slug}/rotisserie/carta`);
     }
 
     return <BarbershopTenantView site={site} />;
@@ -138,6 +138,16 @@ export default async function HomePage(): Promise<React.JSX.Element> {
           <p className="muted">Carta completa de viandas y rotisería, servida desde la base de datos.</p>
           <div className="hero-actions">
             <Link className="button" href="/lafamilia/rotisserie/carta">
+              Ver carta
+            </Link>
+          </div>
+        </article>
+        <article className="feature-card">
+          <p className="eyebrow">/yoni247/rotisserie/carta</p>
+          <h3>Yoni 24/7</h3>
+          <p className="muted">Rotisería con notificaciones WhatsApp automáticas al cliente y al negocio.</p>
+          <div className="hero-actions">
+            <Link className="button" href="/yoni247/rotisserie/carta">
               Ver carta
             </Link>
           </div>

@@ -10,6 +10,7 @@ type PaymentMethod = "cash" | "transfer";
 interface OrderExperienceProps {
   tenantSlug: string;
   catalog: CatalogView;
+  orderBasePath?: string;
 }
 
 interface ProductInfo {
@@ -27,7 +28,8 @@ function formatPrice(priceInCents: number): string {
   }).format(priceInCents / 100);
 }
 
-export function OrderExperience({ tenantSlug, catalog }: OrderExperienceProps): React.JSX.Element {
+export function OrderExperience({ tenantSlug, catalog, orderBasePath }: OrderExperienceProps): React.JSX.Element {
+  const resolvedOrderBasePath = orderBasePath ?? `/${tenantSlug}/rotisserie`;
   const router = useRouter();
 
   const productIndex = useMemo(() => {
@@ -122,7 +124,7 @@ export function OrderExperience({ tenantSlug, catalog }: OrderExperienceProps): 
         return;
       }
 
-      router.push(`/${tenantSlug}/rotisserie/order/${data.orderId}`);
+      router.push(`${resolvedOrderBasePath}/order/${data.orderId}`);
     } catch {
       setErrors(["Hubo un problema de conexión. Probá de nuevo."]);
       setSubmitting(false);

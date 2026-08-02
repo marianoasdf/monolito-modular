@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { resolvePublicTenantBySlug } from "../../../publicTenantHosts";
+import { resolvePublicTenantByHost, resolvePublicTenantBySlug } from "../../../publicTenantHosts";
 
 export async function generateMetadata({
   params,
@@ -31,6 +32,9 @@ export default async function RotisserieTermsPage({
   }
 
   const tenantName = tenant.name;
+  const headersList = await headers();
+  const publicTenant = resolvePublicTenantByHost(headersList.get("host"));
+  const cartaHref = publicTenant?.slug === tenantSlug ? "/" : `/${tenantSlug}/rotisserie/carta`;
 
   return (
     <section className="privacy-page">
@@ -95,7 +99,7 @@ export default async function RotisserieTermsPage({
 
         <p className="privacy-updated">Última actualización: 22 de junio de 2026.</p>
 
-        <Link className="button" href={`/${tenantSlug}/rotisserie/carta`}>
+        <Link className="button" href={cartaHref}>
           Volver a la carta
         </Link>
       </article>

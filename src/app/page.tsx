@@ -49,42 +49,47 @@ export default async function HomePage(): Promise<React.JSX.Element> {
   const host = headersList.get("host");
   const publicTenant = resolvePublicTenantByHost(host);
 
-  if (publicTenant) {
+  if (publicTenant?.vertical === "barbershop") {
     const service = buildGetBarbershopSiteProfileService();
     const site = await service.execute({ tenantSlug: publicTenant.slug });
 
     if (!site) {
-      const tenantContext = await resolveTenantContextBySlug(publicTenant.slug);
-      if (!tenantContext) {
-        notFound();
-      }
-      const catalog = await buildGetCatalogService().execute({ tenantId: tenantContext.tenantId });
-      return (
-        <>
-          <section className="agenda-intro" style={{ marginBottom: "1.5rem" }}>
-            <p className="eyebrow">Carta y pedidos</p>
-            <h1 className="display-title">Hacé tu pedido</h1>
-          </section>
-          {catalog.length === 0 ? (
-            <article className="panel" style={{ padding: "1.6rem" }}>
-              <p className="muted">Todavía no hay productos cargados.</p>
-            </article>
-          ) : (
-            <OrderExperience tenantSlug={publicTenant.slug} catalog={catalog} orderBasePath="/order" />
-          )}
-          <footer className="tenant-footer">
-            <Link className="tenant-footer__link" href="/privacy">
-              Política de privacidad
-            </Link>
-            <Link className="tenant-footer__link" href="/terms">
-              Términos y condiciones
-            </Link>
-          </footer>
-        </>
-      );
+      notFound();
     }
 
     return <BarbershopTenantView site={site} />;
+  }
+
+  if (publicTenant?.vertical === "rotisserie") {
+    const tenantContext = await resolveTenantContextBySlug(publicTenant.slug);
+    if (!tenantContext) {
+      notFound();
+    }
+    const catalog = await buildGetCatalogService().execute({ tenantId: tenantContext.tenantId });
+
+    return (
+      <>
+        <section className="agenda-intro" style={{ marginBottom: "1.5rem" }}>
+          <p className="eyebrow">Carta y pedidos</p>
+          <h1 className="display-title">Hacé tu pedido</h1>
+        </section>
+        {catalog.length === 0 ? (
+          <article className="panel" style={{ padding: "1.6rem" }}>
+            <p className="muted">Todavía no hay productos cargados.</p>
+          </article>
+        ) : (
+          <OrderExperience tenantSlug={publicTenant.slug} catalog={catalog} orderBasePath="/order" />
+        )}
+        <footer className="tenant-footer">
+          <Link className="tenant-footer__link" href="/privacy">
+            Política de privacidad
+          </Link>
+          <Link className="tenant-footer__link" href="/terms">
+            Términos y condiciones
+          </Link>
+        </footer>
+      </>
+    );
   }
 
   return (

@@ -1,27 +1,43 @@
 /** @type {import('next').NextConfig} */
+const publicRotisserieTenants = [
+  {
+    slug: 'yoni247',
+    hosts: ['yoni24hs.com', 'www.yoni24hs.com'],
+  },
+]
+
+function hostCondition(host) {
+  return { type: 'host', value: host }
+}
+
 const nextConfig = {
   experimental: {
     allowedDevOrigins: ['192.168.100.109', 'localhost', '127.0.0.1'],
   },
   swcMinify: false,
   async rewrites() {
-    const yoniHosts = [
-      { type: 'host', value: 'yoni24hs.com' },
-      { type: 'host', value: 'www.yoni24hs.com' },
-    ];
     return {
-      beforeFiles: yoniHosts.flatMap((has) => [
-        { source: '/privacy', has: [has], destination: '/yoni247/rotisserie/privacy' },
-        { source: '/terms', has: [has], destination: '/yoni247/rotisserie/terms' },
-        { source: '/order/:orderId', has: [has], destination: '/yoni247/rotisserie/order/:orderId' },
-      ]),
-    };
+      beforeFiles: publicRotisserieTenants.flatMap((tenant) =>
+        tenant.hosts.flatMap((host) => {
+          const has = [hostCondition(host)]
+          return [
+            { source: '/privacy', has, destination: `/${tenant.slug}/rotisserie/privacy` },
+            { source: '/terms', has, destination: `/${tenant.slug}/rotisserie/terms` },
+            { source: '/order/:orderId', has, destination: `/${tenant.slug}/rotisserie/order/:orderId` },
+          ]
+        }),
+      ),
+    }
   },
   async redirects() {
-    return [
-      { source: '/yoni247/:path*', has: [{ type: 'host', value: 'yoni24hs.com' }], destination: '/', permanent: false },
-      { source: '/yoni247/:path*', has: [{ type: 'host', value: 'www.yoni24hs.com' }], destination: '/', permanent: false },
-    ];
+    return publicRotisserieTenants.flatMap((tenant) =>
+      tenant.hosts.map((host) => ({
+        source: `/${tenant.slug}/:path*`,
+        has: [hostCondition(host)],
+        destination: '/',
+        permanent: false,
+      })),
+    )
   },
 }
 

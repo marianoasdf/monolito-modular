@@ -1,5 +1,7 @@
+import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { resolvePublicTenantByHost } from "../../../../publicTenantHosts";
 import { resolveTenantContextBySlug } from "../../../../../core/tenancy/infra/resolveTenantContextBySlug";
 import { buildGetOrderService } from "../../../../../modules/rotisserie/infra/container/buildGetOrderService";
 
@@ -36,6 +38,9 @@ export default async function RotisserieOrderConfirmationPage({
 
   const service = buildGetOrderService();
   const order = await service.execute({ tenantId: tenant.tenantId, orderId });
+  const headersList = await headers();
+  const publicTenant = resolvePublicTenantByHost(headersList.get("host"));
+  const cartaHref = publicTenant?.slug === tenantSlug ? "/" : `/${tenantSlug}/rotisserie/carta`;
 
   if (!order) {
     notFound();
@@ -85,7 +90,7 @@ export default async function RotisserieOrderConfirmationPage({
 
         <p className="privacy-updated">Número de pedido: {order.id}</p>
 
-        <Link className="button" href={`/${tenantSlug}/rotisserie/carta`}>
+        <Link className="button" href={cartaHref}>
           Volver a la carta
         </Link>
       </article>

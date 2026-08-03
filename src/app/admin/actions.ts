@@ -118,6 +118,60 @@ export async function saveAdminSettingsAction(formData: FormData): Promise<void>
   redirect(`${basePath}?saved=1`);
 }
 
+export async function saveRotisserieAdminAction(formData: FormData): Promise<void> {
+  const basePath = resolveBasePath(formData);
+  const tenantSlug = resolveTenantSlug(formData);
+  const authenticated = await isAdminAuthenticated(tenantSlug);
+
+  if (!authenticated) {
+    redirect(`${basePath}?error=auth`);
+  }
+
+  const tenant = await prisma.tenant.findUnique({
+    where: { slug: tenantSlug },
+    select: { id: true },
+  });
+
+  if (!tenant) {
+    redirect(`${basePath}?error=tenant`);
+  }
+
+  const deliveryFeeInPesos = Number(`${formData.get("deliveryFeeInPesos") || "0"}`);
+  const deliveryFeeInCents = Number.isFinite(deliveryFeeInPesos) && deliveryFeeInPesos >= 0 ? Math.round(deliveryFeeInPesos * 100) : 250000;
+
+  await prisma.rotisserieTenantSettings.upsert({
+    where: { tenantId: tenant.id },
+    update: { deliveryFeeInCents },
+    create: { tenantId: tenant.id, deliveryFeeInCents },
+  });
+
+  const productIds = [...formData.keys()]
+    .filter((key) => key.startsWith("productId:"))
+    .map((key) => `${formData.get(key) || ""}`)
+    .filter(Boolean);
+
+  for (const productId of productIds) {
+    const priceInPesos = Number(`${formData.get(`price:${productId}`) || "0"}`);
+    const stockRaw = `${formData.get(`stock:${productId}`) || ""}`.trim();
+    const stockQuantity = stockRaw === "" ? null : Number(stockRaw);
+    const isAvailable = `${formData.get(`available:${productId}`) || "yes"}` === "yes";
+
+    await prisma.rotisserieProduct.updateMany({
+      where: { id: productId, tenantId: tenant.id },
+      data: {
+        priceInCents: Number.isFinite(priceInPesos) && priceInPesos >= 0 ? Math.round(priceInPesos * 100) : 0,
+        stockQuantity: stockQuantity !== null && Number.isFinite(stockQuantity) && stockQuantity >= 0 ? Math.floor(stockQuantity) : null,
+        isAvailable,
+      },
+    });
+  }
+
+  revalidatePath("/");
+  revalidatePath(`/${tenantSlug}/rotisserie/carta`);
+  revalidatePath(basePath);
+  redirect(`${basePath}?saved=1`);
+}
+
 export async function cancelAppointmentAction(formData: FormData): Promise<void> {
   const basePath = resolveBasePath(formData);
   const tenantSlug = resolveTenantSlug(formData);

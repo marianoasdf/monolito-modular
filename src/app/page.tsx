@@ -7,6 +7,7 @@ import { resolvePublicTenantByHost } from "./publicTenantHosts";
 import { buildGetBarbershopSiteProfileService } from "../modules/barbershop/infra/container/buildGetBarbershopSiteProfileService";
 import { buildGetCatalogService } from "../modules/rotisserie/infra/container/buildGetCatalogService";
 import { resolveTenantContextBySlug } from "../core/tenancy/infra/resolveTenantContextBySlug";
+import { prisma } from "../core/shared/infra/prisma/prismaClient";
 
 const realTenants = [
   {
@@ -66,6 +67,10 @@ export default async function HomePage(): Promise<React.JSX.Element> {
       notFound();
     }
     const catalog = await buildGetCatalogService().execute({ tenantId: tenantContext.tenantId });
+    const settings = await prisma.rotisserieTenantSettings.findUnique({
+      where: { tenantId: tenantContext.tenantId },
+      select: { deliveryFeeInCents: true },
+    });
 
     return (
       <>
@@ -78,7 +83,7 @@ export default async function HomePage(): Promise<React.JSX.Element> {
             <p className="muted">Todavía no hay productos cargados.</p>
           </article>
         ) : (
-          <OrderExperience tenantSlug={publicTenant.slug} catalog={catalog} orderBasePath="/order" />
+          <OrderExperience tenantSlug={publicTenant.slug} catalog={catalog} orderBasePath="/order" deliveryFeeInCents={settings?.deliveryFeeInCents ?? 250000} />
         )}
         <footer className="tenant-footer">
           <Link className="tenant-footer__link" href="/privacy">

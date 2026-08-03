@@ -1,4 +1,5 @@
 import { NotificationSender } from "../../../../core/notifications/application/contracts/NotificationSender";
+import { prisma } from "../../../../core/shared/infra/prisma/prismaClient";
 import { DomainError } from "../../../../core/shared/domain/DomainError";
 import { UseCase } from "../../../../core/shared/application/UseCase";
 import { Order } from "../../domain/entities/Order";
@@ -71,6 +72,10 @@ export class CreateOrderService implements UseCase<CreateOrderCommand, { orderId
 
       const productProps = product.toPrimitives();
 
+      if (productProps.stockQuantity !== undefined && productProps.stockQuantity < quantity) {
+        throw new DomainError(`${productProps.name} no tiene stock suficiente`);
+      }
+
       return OrderItem.create({
         productId: productProps.id,
         productName: productProps.name,
@@ -78,6 +83,12 @@ export class CreateOrderService implements UseCase<CreateOrderCommand, { orderId
         quantity,
       });
     });
+
+    const settings = await prisma.rotisserieTenantSettings.findUnique({
+      where: { tenantId: command.tenantId },
+      select: { deliveryFeeInCents: true },
+    });
+    const deliveryFeeInCents = command.fulfillmentType === "delivery" ? settings?.deliveryFeeInCents ?? 250000 : 0;
 
     const order = Order.create({
       id: crypto.randomUUID(),
@@ -88,6 +99,7 @@ export class CreateOrderService implements UseCase<CreateOrderCommand, { orderId
       deliveryAddress: command.deliveryAddress,
       paymentMethod: command.paymentMethod,
       items,
+      deliveryFeeInCents,
       notes: command.notes,
     });
 

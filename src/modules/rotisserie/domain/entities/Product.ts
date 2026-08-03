@@ -7,6 +7,8 @@ export interface ProductProps {
   name: string;
   description?: string;
   priceInCents: number;
+  stockQuantity?: number;
+  isAvailable: boolean;
   sortOrder: number;
 }
 
@@ -26,6 +28,10 @@ export class Product {
 
     if (!Number.isInteger(props.priceInCents) || props.priceInCents < 0) {
       throw new DomainError("Product priceInCents must be a non-negative integer");
+    }
+
+    if (props.stockQuantity !== undefined && (!Number.isInteger(props.stockQuantity) || props.stockQuantity < 0)) {
+      throw new DomainError("Product stockQuantity must be a non-negative integer");
     }
   }
 

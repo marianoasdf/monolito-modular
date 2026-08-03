@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { resolveTenantContextBySlug } from "../../../../core/tenancy/infra/resolveTenantContextBySlug";
+import { prisma } from "../../../../core/shared/infra/prisma/prismaClient";
 import { buildGetCatalogService } from "../../../../modules/rotisserie/infra/container/buildGetCatalogService";
 import { OrderExperience } from "../OrderExperience";
 
@@ -18,6 +19,10 @@ export default async function RotisserieCatalogPage({
 
   const service = buildGetCatalogService();
   const catalog = await service.execute({ tenantId: tenant.tenantId });
+  const settings = await prisma.rotisserieTenantSettings.findUnique({
+    where: { tenantId: tenant.tenantId },
+    select: { deliveryFeeInCents: true },
+  });
 
   return (
     <>
@@ -31,7 +36,7 @@ export default async function RotisserieCatalogPage({
           <p className="muted">Todavía no hay productos cargados.</p>
         </article>
       ) : (
-        <OrderExperience tenantSlug={tenant.tenantSlug} catalog={catalog} />
+        <OrderExperience tenantSlug={tenant.tenantSlug} catalog={catalog} deliveryFeeInCents={settings?.deliveryFeeInCents ?? 250000} />
       )}
 
       <footer className="tenant-footer">

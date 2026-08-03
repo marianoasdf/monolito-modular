@@ -8,6 +8,7 @@ export interface CatalogProductView {
   name: string;
   description?: string;
   priceInCents: number;
+  stockQuantity?: number;
 }
 
 export interface CatalogCategoryView {
@@ -40,6 +41,7 @@ export class GetCatalogService implements UseCase<GetCatalogQuery, CatalogView> 
         name: props.name,
         description: props.description,
         priceInCents: props.priceInCents,
+        stockQuantity: props.stockQuantity,
       });
       productsByCategory.set(props.categoryId, bucket);
     }

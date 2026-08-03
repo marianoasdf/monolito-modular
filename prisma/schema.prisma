@@ -27,6 +27,7 @@ model Tenant {
   rotisserieCategories RotisserieCategory[]
   rotisserieProducts   RotisserieProduct[]
   rotisserieOrders     RotisserieOrder[]
+  rotisserieSettings   RotisserieTenantSettings?
 
   @@map("tenants")
 }
@@ -112,6 +113,18 @@ model TenantIntegration {
   @@map("tenant_integrations")
 }
 
+model RotisserieTenantSettings {
+  id                    String   @id @default(cuid())
+  tenantId              String   @unique
+  deliveryFeeInCents    Int      @default(250000)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  tenant                Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("rotisserie_tenant_settings")
+}
+
 model RotisserieCategory {
   id        String   @id @default(cuid())
   tenantId  String
@@ -134,6 +147,8 @@ model RotisserieProduct {
   name         String
   description  String?
   priceInCents Int
+  stockQuantity Int?
+  isAvailable  Boolean  @default(true)
   sortOrder    Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -155,6 +170,7 @@ model RotisserieOrder {
   deliveryAddress String?
   paymentMethod   String
   status          String   @default("pending")
+  deliveryFeeInCents Int @default(0)
   totalInCents    Int
   notes           String?
   createdAt       DateTime @default(now())

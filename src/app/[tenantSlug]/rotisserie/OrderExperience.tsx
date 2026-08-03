@@ -11,12 +11,14 @@ interface OrderExperienceProps {
   tenantSlug: string;
   catalog: CatalogView;
   orderBasePath?: string;
+  deliveryFeeInCents?: number;
 }
 
 interface ProductInfo {
   id: string;
   name: string;
   priceInCents: number;
+  stockQuantity?: number;
 }
 
 function formatPrice(priceInCents: number): string {
@@ -28,7 +30,7 @@ function formatPrice(priceInCents: number): string {
   }).format(priceInCents / 100);
 }
 
-export function OrderExperience({ tenantSlug, catalog, orderBasePath }: OrderExperienceProps): React.JSX.Element {
+export function OrderExperience({ tenantSlug, catalog, orderBasePath, deliveryFeeInCents = 250000 }: OrderExperienceProps): React.JSX.Element {
   const resolvedOrderBasePath = orderBasePath ?? `/${tenantSlug}/rotisserie`;
   const router = useRouter();
 
@@ -40,6 +42,7 @@ export function OrderExperience({ tenantSlug, catalog, orderBasePath }: OrderExp
           id: product.id,
           name: product.name,
           priceInCents: product.priceInCents,
+          stockQuantity: product.stockQuantity,
         });
       }
     }
@@ -66,17 +69,21 @@ export function OrderExperience({ tenantSlug, catalog, orderBasePath }: OrderExp
       .filter((line): line is { product: ProductInfo; quantity: number } => line !== null);
   }, [cart, productIndex]);
 
-  const totalInCents = cartLines.reduce(
+  const subtotalInCents = cartLines.reduce(
     (sum, line) => sum + line.product.priceInCents * line.quantity,
     0,
   );
+  const resolvedDeliveryFeeInCents = fulfillmentType === "delivery" ? deliveryFeeInCents : 0;
+  const totalInCents = subtotalInCents + resolvedDeliveryFeeInCents;
 
   const itemCount = cartLines.reduce((sum, line) => sum + line.quantity, 0);
 
   function changeQuantity(productId: string, delta: number): void {
     setCart((current) => {
       const next = { ...current };
-      const quantity = (next[productId] ?? 0) + delta;
+      const product = productIndex.get(productId);
+      const requestedQuantity = (next[productId] ?? 0) + delta;
+      const quantity = product?.stockQuantity !== undefined ? Math.min(requestedQuantity, product.stockQuantity) : requestedQuantity;
       if (quantity <= 0) {
         delete next[productId];
       } else {
@@ -178,6 +185,7 @@ export function OrderExperience({ tenantSlug, catalog, orderBasePath }: OrderExp
                             style={{ minHeight: "2.4rem", padding: "0 0.9rem" }}
                             onClick={() => changeQuantity(product.id, 1)}
                             aria-label={`Agregar uno de ${product.name}`}
+                            disabled={product.stockQuantity !== undefined && quantity >= product.stockQuantity}
                           >
                             +
                           </button>
@@ -215,6 +223,7 @@ export function OrderExperience({ tenantSlug, catalog, orderBasePath }: OrderExp
         <div className="booking-summary booking-summary--selected">
           <span>Total ({itemCount} {itemCount === 1 ? "ítem" : "ítems"})</span>
           <strong>{formatPrice(totalInCents)}</strong>
+          {resolvedDeliveryFeeInCents > 0 ? <span>Incluye envío: {formatPrice(resolvedDeliveryFeeInCents)}</span> : null}
         </div>
 
         <form className="booking-form" onSubmit={handleSubmit}>

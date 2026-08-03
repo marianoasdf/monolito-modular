@@ -13,29 +13,45 @@ export class PrismaOrderRepository implements OrderRepository {
   async save(order: Order): Promise<void> {
     const props = order.toPrimitives();
 
-    await this.prismaClient.rotisserieOrder.create({
-      data: {
-        id: props.id,
-        tenantId: props.tenantId,
-        customerName: props.customerName,
-        customerPhone: props.customerPhone,
-        fulfillmentType: props.fulfillmentType,
-        deliveryAddress: props.deliveryAddress ?? null,
-        paymentMethod: props.paymentMethod,
-        status: props.status,
-        totalInCents: props.totalInCents,
-        notes: props.notes ?? null,
-        items: {
-          create: props.items.map((item) => ({
-            tenantId: props.tenantId,
-            productId: item.productId,
-            productName: item.productName,
-            unitPriceInCents: item.unitPriceInCents,
-            quantity: item.quantity,
-            lineTotalInCents: item.lineTotalInCents,
-          })),
+    await this.prismaClient.$transaction(async (tx) => {
+      await tx.rotisserieOrder.create({
+        data: {
+          id: props.id,
+          tenantId: props.tenantId,
+          customerName: props.customerName,
+          customerPhone: props.customerPhone,
+          fulfillmentType: props.fulfillmentType,
+          deliveryAddress: props.deliveryAddress ?? null,
+          paymentMethod: props.paymentMethod,
+          status: props.status,
+          deliveryFeeInCents: props.deliveryFeeInCents,
+          totalInCents: props.totalInCents,
+          notes: props.notes ?? null,
+          items: {
+            create: props.items.map((item) => ({
+              tenantId: props.tenantId,
+              productId: item.productId,
+              productName: item.productName,
+              unitPriceInCents: item.unitPriceInCents,
+              quantity: item.quantity,
+              lineTotalInCents: item.lineTotalInCents,
+            })),
+          },
         },
-      },
+      });
+
+      for (const item of props.items) {
+        await tx.rotisserieProduct.updateMany({
+          where: {
+            id: item.productId,
+            tenantId: props.tenantId,
+            stockQuantity: { gte: item.quantity },
+          },
+          data: {
+            stockQuantity: { decrement: item.quantity },
+          },
+        });
+      }
     });
   }
 
@@ -70,6 +86,7 @@ export class PrismaOrderRepository implements OrderRepository {
       deliveryAddress: row.deliveryAddress ?? undefined,
       paymentMethod: row.paymentMethod as PaymentMethod,
       items,
+      deliveryFeeInCents: row.deliveryFeeInCents,
       notes: row.notes ?? undefined,
     });
   }

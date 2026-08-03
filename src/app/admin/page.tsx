@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "../../core/shared/infra/prisma/prismaClient";
 import { resolvePublicTenantByHost } from "../publicTenantHosts";
 import { AdminPanel } from "./AdminPanel";
+import { RotisserieAdminPanel } from "./RotisserieAdminPanel";
 
 export default async function AdminIndexPage({
   searchParams,
@@ -21,6 +22,11 @@ export default async function AdminIndexPage({
   const host = headersList.get("host");
   const publicTenant = resolvePublicTenantByHost(host);
   const slug = publicTenant?.slug ?? "mgbarber";
+
+  if (publicTenant?.vertical === "rotisserie") {
+    const query = await searchParams;
+    return <RotisserieAdminPanel tenantSlug={slug} basePath="/admin" query={query} />;
+  }
 
   const tenant = await prisma.tenant.findUnique({
     where: { slug },

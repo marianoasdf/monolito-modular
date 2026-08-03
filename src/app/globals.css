@@ -412,6 +412,30 @@ select {
   font-size: 0.85rem;
 }
 
+.rotisserie-admin-category-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.rotisserie-admin-category {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--surface-strong) 72%, transparent);
+}
+
+.rotisserie-admin-category h3 {
+  font-size: 1.05rem;
+}
+
+.rotisserie-admin-product-card {
+  align-items: stretch;
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) repeat(3, minmax(8rem, 0.55fr));
+}
+
 .agenda-intro {
   display: grid;
   gap: 0.25rem;
@@ -697,7 +721,8 @@ select {
   }
 
   .admin-grid,
-  .admin-schedule-grid {
+  .admin-schedule-grid,
+  .rotisserie-admin-product-card {
     grid-template-columns: 1fr;
   }
 }

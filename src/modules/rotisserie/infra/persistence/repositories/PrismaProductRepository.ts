@@ -12,6 +12,8 @@ export class PrismaProductRepository implements ProductRepository {
     name: string;
     description: string | null;
     priceInCents: number;
+    stockQuantity: number | null;
+    isAvailable: boolean;
     sortOrder: number;
   }): Product {
     return Product.create({
@@ -21,13 +23,19 @@ export class PrismaProductRepository implements ProductRepository {
       name: row.name,
       description: row.description ?? undefined,
       priceInCents: row.priceInCents,
+      stockQuantity: row.stockQuantity ?? undefined,
+      isAvailable: row.isAvailable,
       sortOrder: row.sortOrder,
     });
   }
 
   async listByTenant(tenantId: string): Promise<Product[]> {
     const rows = await this.prismaClient.rotisserieProduct.findMany({
-      where: { tenantId },
+      where: {
+        tenantId,
+        isAvailable: true,
+        OR: [{ stockQuantity: null }, { stockQuantity: { gt: 0 } }],
+      },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     });
 
@@ -46,6 +54,8 @@ export class PrismaProductRepository implements ProductRepository {
       where: {
         tenantId: input.tenantId,
         id: { in: input.productIds },
+        isAvailable: true,
+        OR: [{ stockQuantity: null }, { stockQuantity: { gt: 0 } }],
       },
     });
 

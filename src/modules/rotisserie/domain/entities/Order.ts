@@ -12,6 +12,7 @@ export interface OrderProps {
   paymentMethod: PaymentMethod;
   status: OrderStatus;
   items: OrderItem[];
+  deliveryFeeInCents: number;
   totalInCents: number;
   notes?: string;
 }
@@ -25,6 +26,7 @@ export interface CreateOrderProps {
   deliveryAddress?: string;
   paymentMethod: PaymentMethod;
   items: OrderItem[];
+  deliveryFeeInCents?: number;
   notes?: string;
 }
 
@@ -38,6 +40,7 @@ export interface OrderPrimitives {
   paymentMethod: PaymentMethod;
   status: OrderStatus;
   items: OrderItemProps[];
+  deliveryFeeInCents: number;
   totalInCents: number;
   notes?: string;
 }
@@ -66,9 +69,10 @@ export class Order {
       throw new DomainError("deliveryAddress is required for delivery orders");
     }
 
+    const deliveryFeeInCents = props.fulfillmentType === "delivery" ? props.deliveryFeeInCents ?? 0 : 0;
     const totalInCents = props.items.reduce(
       (sum, item) => sum + item.toPrimitives().lineTotalInCents,
-      0,
+      deliveryFeeInCents,
     );
 
     if (totalInCents <= 0) {
@@ -85,6 +89,7 @@ export class Order {
       paymentMethod: props.paymentMethod,
       status: "pending",
       items: props.items,
+      deliveryFeeInCents,
       totalInCents,
       notes: props.notes?.trim() || undefined,
     });
@@ -101,6 +106,7 @@ export class Order {
       paymentMethod: this.props.paymentMethod,
       status: this.props.status,
       items: this.props.items.map((item) => item.toPrimitives()),
+      deliveryFeeInCents: this.props.deliveryFeeInCents,
       totalInCents: this.props.totalInCents,
       notes: this.props.notes,
     };

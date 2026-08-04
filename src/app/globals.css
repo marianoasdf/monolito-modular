@@ -264,7 +264,7 @@ select {
   margin: 3rem 0 1rem;
   display: flex;
   justify-content: space-between;
-  align-items: end;
+  align-items: flex-end;
   gap: 1rem;
 }
 
@@ -336,7 +336,7 @@ select {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  align-items: start;
+  align-items: flex-start;
 }
 
 .admin-actions {
@@ -618,6 +618,51 @@ select {
   font-weight: 700;
 }
 
+.rotisserie-category-panel {
+  padding: 1.6rem;
+}
+
+.rotisserie-product-row {
+  align-items: center;
+}
+
+.rotisserie-product-info {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.rotisserie-product-info strong {
+  overflow-wrap: anywhere;
+}
+
+.rotisserie-product-actions,
+.rotisserie-quantity-control {
+  display: inline-flex;
+  align-items: center;
+}
+
+.rotisserie-product-actions {
+  flex-shrink: 0;
+  gap: 0.75rem;
+}
+
+.rotisserie-quantity-control {
+  gap: 0.5rem;
+}
+
+.rotisserie-quantity-button {
+  min-height: 2.4rem;
+  min-width: 2.4rem;
+  padding: 0 0.9rem;
+}
+
+.rotisserie-quantity-value {
+  min-width: 1.5rem;
+  text-align: center;
+  font-weight: 700;
+}
+
 .pill {
   display: inline-flex;
   align-items: center;
@@ -716,7 +761,7 @@ select {
   .site-header__inner,
   .site-footer__inner,
   .admin-topbar {
-    align-items: start;
+    align-items: flex-start;
     flex-direction: column;
   }
 
@@ -734,6 +779,38 @@ select {
 
   .booking-form {
     grid-template-columns: 1fr;
+  }
+
+  .rotisserie-category-panel {
+    padding: 1.25rem;
+  }
+
+  .rotisserie-product-row {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.9rem;
+  }
+
+  .rotisserie-product-actions {
+    justify-content: space-between;
+    width: 100%;
+    gap: 0.6rem;
+  }
+
+  .rotisserie-quantity-control {
+    gap: 0.35rem;
+  }
+
+  .rotisserie-quantity-button {
+    border-radius: 999px;
+    min-height: 2.6rem;
+    min-width: 2.6rem;
+    padding: 0;
+  }
+
+  .rotisserie-quantity-value {
+    min-width: 1.2rem;
   }
 
   .agenda-grid {

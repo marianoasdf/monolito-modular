@@ -142,7 +142,7 @@ export function OrderExperience({ tenantSlug, catalog, orderBasePath, deliveryFe
     <div className="tenant-layout">
       <section className="agenda-shell">
         {catalog.map((category) => (
-          <article key={category.id} className="panel" style={{ padding: "1.6rem" }}>
+          <article key={category.id} className="panel rotisserie-category-panel">
             <h2 style={{ margin: "0 0 1rem", fontSize: "1.4rem", letterSpacing: "-0.02em" }}>
               {category.name}
             </h2>
@@ -150,12 +150,12 @@ export function OrderExperience({ tenantSlug, catalog, orderBasePath, deliveryFe
             {category.products.length === 0 ? (
               <p className="muted">Sin productos en esta categoría.</p>
             ) : (
-              <ul className="service-list">
+              <ul className="service-list rotisserie-product-list">
                 {category.products.map((product) => {
                   const quantity = cart[product.id] ?? 0;
                   return (
-                    <li key={product.id}>
-                      <span style={{ display: "grid", gap: "0.15rem" }}>
+                    <li key={product.id} className="rotisserie-product-row">
+                      <span className="rotisserie-product-info">
                         <strong>{product.name}</strong>
                         {product.description ? (
                           <span className="muted" style={{ fontSize: "0.9rem" }}>
@@ -163,26 +163,24 @@ export function OrderExperience({ tenantSlug, catalog, orderBasePath, deliveryFe
                           </span>
                         ) : null}
                       </span>
-                      <span style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                      <span className="rotisserie-product-actions">
                         <span className="price">{formatPrice(product.priceInCents)}</span>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+                        <span className="rotisserie-quantity-control">
                           <button
                             type="button"
-                            className="button-secondary"
-                            style={{ minHeight: "2.4rem", padding: "0 0.9rem" }}
+                            className="button-secondary rotisserie-quantity-button"
                             onClick={() => changeQuantity(product.id, -1)}
                             aria-label={`Quitar uno de ${product.name}`}
                             disabled={quantity === 0}
                           >
                             −
                           </button>
-                          <span style={{ minWidth: "1.5rem", textAlign: "center", fontWeight: 700 }}>
+                          <span className="rotisserie-quantity-value">
                             {quantity}
                           </span>
                           <button
                             type="button"
-                            className="button-secondary"
-                            style={{ minHeight: "2.4rem", padding: "0 0.9rem" }}
+                            className="button-secondary rotisserie-quantity-button"
                             onClick={() => changeQuantity(product.id, 1)}
                             aria-label={`Agregar uno de ${product.name}`}
                             disabled={product.stockQuantity !== undefined && quantity >= product.stockQuantity}

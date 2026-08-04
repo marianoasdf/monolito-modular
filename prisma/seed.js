@@ -263,7 +263,7 @@ const yoni247Catalog = [
       { id: "rotprod_yoni247_pizza_napolitana", name: "Pizza napolitana", priceInCents: 1200000, sortOrder: 2 },
       { id: "rotprod_yoni247_pizza_primavera", name: "Pizza primavera", priceInCents: 1200000, sortOrder: 3 },
       { id: "rotprod_yoni247_pizza_caballo", name: "Pizza caballo", priceInCents: 1500000, sortOrder: 4 },
-      { id: "rotprod_yoni247_pizza_calabaza", name: "Pizza calabaza", priceInCents: 1400000, sortOrder: 5 },
+      { id: "rotprod_yoni247_pizza_calabaza", name: "Pizza calabresa", priceInCents: 1400000, sortOrder: 5 },
       { id: "rotprod_yoni247_pizza_jamon_morron", name: "Pizza jamón morrón", priceInCents: 1400000, sortOrder: 6 },
     ],
   },
@@ -275,7 +275,7 @@ const yoni247Catalog = [
       { id: "rotprod_yoni247_hamb_completa", name: "Hamburguesa completa", description: "Sale con papas.", priceInCents: 750000, sortOrder: 1 },
       { id: "rotprod_yoni247_sandwid_mila_completa", name: "Sandwid Mila completa", description: "Sale con papas.", priceInCents: 950000, sortOrder: 2 },
       { id: "rotprod_yoni247_mila_napo", name: "Mila Napo", description: "Sale con papas.", priceInCents: 1000000, sortOrder: 3 },
-      { id: "rotprod_yoni247_primo_muzza", name: "Primo muzza", description: "Sale con papas.", priceInCents: 1400000, sortOrder: 4 },
+      { id: "rotprod_yoni247_primo_muzza", name: "Promo muzza", description: "Sale con papas.", priceInCents: 1400000, sortOrder: 4 },
       { id: "rotprod_yoni247_mila_napo_dos", name: "Mila Napo para dos", priceInCents: 1500000, sortOrder: 5 },
     ],
   },
@@ -318,7 +318,13 @@ async function seedYoni247() {
     for (const product of category.products) {
       await prisma.rotisserieProduct.upsert({
         where: { id: product.id },
-        update: {},
+        update: {
+          categoryId: category.id,
+          name: product.name,
+          description: product.description,
+          priceInCents: product.priceInCents,
+          sortOrder: product.sortOrder,
+        },
         create: {
           id: product.id,
           tenantId: yoni247Tenant.id,

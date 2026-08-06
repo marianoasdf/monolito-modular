@@ -47,27 +47,46 @@ export class WebhookNotificationSender implements NotificationSender {
     const notes = message.metadata?.notes || "Sin nota";
     const customerPhone = message.metadata?.customerPhoneNumber || "N/A";
 
-    // WhatsApp Cloud API endpoint (Facebook Graph), not Instagram Graph
-    const url = `https://graph.facebook.com/v19.0/${this.phoneNumberId}/messages`;
+    const results = await Promise.allSettled([
+      this.sendTemplate(this.recipientPhoneNumber, "barbershop_appointment", [
+        customerName,
+        serviceName,
+        appointmentDateTime,
+        customerPhone,
+        notes,
+      ]),
+      this.sendTemplate(message.recipient, "confirmacion_reserva_barberia", [
+        customerName,
+        serviceName,
+        appointmentDateTime,
+        this.recipientPhoneNumber,
+      ]),
+    ]);
 
-    // Build template payload using components/body/parameters shape
+    const rejectedResult = results.find((result) => result.status === "rejected");
+
+    if (rejectedResult) {
+      throw rejectedResult.reason;
+    }
+  }
+
+  private async sendTemplate(
+    recipientPhoneNumber: string,
+    templateName: string,
+    parameters: string[],
+  ): Promise<void> {
+    const url = `https://graph.facebook.com/v19.0/${this.phoneNumberId}/messages`;
     const payload = {
       messaging_product: "whatsapp",
-      to: this.recipientPhoneNumber,
+      to: recipientPhoneNumber,
       type: "template" as const,
       template: {
-        name: "barbershop_appointment",
+        name: templateName,
         language: { code: "es_AR" },
         components: [
           {
             type: "body" as const,
-            parameters: [
-              { type: "text", text: customerName },
-              { type: "text", text: serviceName },
-              { type: "text", text: appointmentDateTime },
-              { type: "text", text: customerPhone },
-              { type: "text", text: notes },
-            ],
+            parameters: parameters.map((text) => ({ type: "text" as const, text })),
           },
         ],
       },

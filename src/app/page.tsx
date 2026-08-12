@@ -83,7 +83,7 @@ export default async function HomePage(): Promise<React.JSX.Element> {
             <p className="muted">Todavía no hay productos cargados.</p>
           </article>
         ) : (
-          <OrderExperience tenantSlug={publicTenant.slug} catalog={catalog} orderBasePath="/order" deliveryFeeInCents={settings?.deliveryFeeInCents ?? 250000} />
+          <OrderExperience tenantSlug={publicTenant.slug} catalog={catalog} orderBasePath="" deliveryFeeInCents={settings?.deliveryFeeInCents ?? 250000} />
         )}
         <footer className="tenant-footer">
           <Link className="tenant-footer__link" href="/privacy">

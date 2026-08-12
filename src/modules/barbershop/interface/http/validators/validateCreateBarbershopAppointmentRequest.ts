@@ -1,3 +1,4 @@
+import { BarbershopAppointmentPaymentMethod } from "../../../domain/entities/BarbershopAppointment";
 import { normalizeBarbershopPhoneNumber } from "../../../domain/value-objects/normalizeBarbershopPhoneNumber";
 
 export interface CreateBarbershopAppointmentHttpRequest {
@@ -10,6 +11,8 @@ export interface CreateBarbershopAppointmentHttpRequest {
   serviceName?: string;
   startsAt: string;
   durationInMinutes: number;
+  priceInArs: number;
+  paymentMethod: BarbershopAppointmentPaymentMethod;
   notes?: string;
 }
 
@@ -38,6 +41,10 @@ function readOptionalTrimmedString(value: unknown): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
+function isPaymentMethod(value: unknown): value is BarbershopAppointmentPaymentMethod {
+  return value === "cash" || value === "mercadopago";
+}
+
 export function validateCreateBarbershopAppointmentRequest(
   value: unknown,
 ): ValidationResult {
@@ -57,10 +64,12 @@ export function validateCreateBarbershopAppointmentRequest(
   const serviceName = readOptionalTrimmedString(value.serviceName);
   const startsAt = readOptionalTrimmedString(value.startsAt);
   const notes = readOptionalTrimmedString(value.notes);
+  const paymentMethod = value.paymentMethod ?? "cash";
   const errors: string[] = [];
 
   const durationInMinutes =
     typeof value.durationInMinutes === "number" ? value.durationInMinutes : Number.NaN;
+  const priceInArs = typeof value.priceInArs === "number" ? value.priceInArs : Number.NaN;
 
   if (!tenantId || tenantId.length > 80) {
     errors.push("tenantId is required and must be at most 80 characters");
@@ -89,6 +98,14 @@ export function validateCreateBarbershopAppointmentRequest(
 
   if (!Number.isInteger(durationInMinutes) || durationInMinutes < 15 || durationInMinutes > 240) {
     errors.push("durationInMinutes must be an integer between 15 and 240");
+  }
+
+  if (!Number.isFinite(priceInArs) || priceInArs <= 0) {
+    errors.push("priceInArs must be a number greater than zero");
+  }
+
+  if (!isPaymentMethod(paymentMethod)) {
+    errors.push("paymentMethod must be 'cash' or 'mercadopago'");
   }
 
   if (notes && notes.length > 300) {
@@ -140,6 +157,8 @@ export function validateCreateBarbershopAppointmentRequest(
       serviceName,
       startsAt: startsAt!,
       durationInMinutes,
+      priceInArs,
+      paymentMethod: paymentMethod as BarbershopAppointmentPaymentMethod,
       notes,
     },
   };

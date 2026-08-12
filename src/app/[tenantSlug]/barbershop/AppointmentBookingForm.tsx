@@ -6,6 +6,16 @@ import {
   FeaturedBarbershopService,
 } from "../../../modules/barbershop/domain/entities/BarbershopSiteProfile";
 import { normalizeBarbershopPhoneNumber } from "../../../modules/barbershop/domain/value-objects/normalizeBarbershopPhoneNumber";
+import { MercadoPagoPaymentBrick } from "./MercadoPagoPaymentBrick";
+
+function formatPrice(priceInArs: number): string {
+  return new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(priceInArs);
+}
 
 function formatDuration(minutes: number): string {
   const hours = Math.floor(minutes / 60);
@@ -16,7 +26,7 @@ function formatDuration(minutes: number): string {
 }
 
 function formatServiceLabel(service: FeaturedBarbershopService): string {
-  return `${service.name.toLowerCase()} · ${formatDuration(service.durationInMinutes)} · ${service.priceInArs}$`;
+  return `${service.name.toLowerCase()} · ${formatDuration(service.durationInMinutes)} · ${formatPrice(service.priceInArs)}`;
 }
 
 interface AppointmentBookingFormProps {
@@ -35,6 +45,12 @@ interface SubmitState {
   errors?: string[];
 }
 
+interface PendingMercadoPagoPayment {
+  appointmentId: string;
+  serviceName: string;
+  priceInArs: number;
+}
+
 export function AppointmentBookingForm({
   tenantId,
   tenantSlug,
@@ -45,11 +61,14 @@ export function AppointmentBookingForm({
 }: AppointmentBookingFormProps): React.JSX.Element {
   const [selectedServiceName, setSelectedServiceName] = useState<string>(services[0]?.name ?? "");
   const [selectedSlotStartsAt, setSelectedSlotStartsAt] = useState<string>("");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"cash" | "mercadopago">("cash");
   const [submitState, setSubmitState] = useState<SubmitState>({ kind: "idle" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingMercadoPagoPayment, setPendingMercadoPagoPayment] = useState<PendingMercadoPagoPayment>();
   const [slots, setSlots] = useState<BarbershopAgendaSlot[]>(todaySlots);
   const bookingSummaryRef = useRef<HTMLDivElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
+  const paymentRef = useRef<HTMLDivElement>(null);
 
   const selectedService =
     services.find((service) => service.name === selectedServiceName) ?? services[0];
@@ -87,6 +106,7 @@ export function AppointmentBookingForm({
   function handleSlotSelection(slotStartsAt: string): void {
     setSelectedSlotStartsAt(slotStartsAt);
     setSubmitState({ kind: "idle" });
+    setPendingMercadoPagoPayment(undefined);
     scrollToBookingSummary();
   }
 
@@ -97,6 +117,7 @@ export function AppointmentBookingForm({
     const formData = new FormData(form);
     const customerFullName = `${formData.get("customerFullName") || ""}`.trim();
     const customerPhoneNumber = `${formData.get("customerPhoneNumber") || ""}`.trim();
+    const paymentMethod = formData.get("paymentMethod") === "mercadopago" ? "mercadopago" : "cash";
 
     if (!selectedService) {
       setSubmitState({ kind: "error", message: "No hay servicios configurados para este tenant." });
@@ -120,6 +141,7 @@ export function AppointmentBookingForm({
 
     setIsSubmitting(true);
     setSubmitState({ kind: "idle" });
+    setPendingMercadoPagoPayment(undefined);
 
     try {
       const response = await fetch("/api/barbershop/appointments", {
@@ -136,6 +158,8 @@ export function AppointmentBookingForm({
           serviceName: selectedService.name,
           startsAt: selectedSlot.startsAt,
           durationInMinutes: selectedService.durationInMinutes,
+          priceInArs: selectedService.priceInArs,
+          paymentMethod,
           notes: formData.get("notes") || undefined,
         }),
       });
@@ -161,6 +185,14 @@ export function AppointmentBookingForm({
         appointmentId: responseBody.appointmentId,
       });
 
+      if (paymentMethod === "mercadopago" && responseBody.appointmentId) {
+        setPendingMercadoPagoPayment({
+          appointmentId: responseBody.appointmentId,
+          serviceName: selectedService.name,
+          priceInArs: selectedService.priceInArs,
+        });
+      }
+
       const reservedStartsAt = selectedSlot.startsAt;
       setSlots((previousSlots) =>
         previousSlots.map((slot) =>
@@ -171,9 +203,11 @@ export function AppointmentBookingForm({
       form.reset();
       setSelectedServiceName(services[0]?.name ?? "");
       setSelectedSlotStartsAt("");
+      setSelectedPaymentMethod(paymentMethod === "mercadopago" ? "mercadopago" : "cash");
 
       setTimeout(() => {
-        successRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        const target = paymentMethod === "mercadopago" ? paymentRef.current : successRef.current;
+        target?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 100);
     } catch {
       setSubmitState({
@@ -292,6 +326,19 @@ export function AppointmentBookingForm({
         </div>
 
         <label className="booking-field booking-field--full">
+          <span className="sr-only">Método de pago</span>
+          <select
+            name="paymentMethod"
+            value={selectedPaymentMethod}
+            onChange={(event) => setSelectedPaymentMethod(event.target.value === "mercadopago" ? "mercadopago" : "cash")}
+            required
+          >
+            <option value="cash">Efectivo</option>
+            <option value="mercadopago">Mercado Pago / Tarjetas</option>
+          </select>
+        </label>
+
+        <label className="booking-field booking-field--full">
           <span className="sr-only">Nota (opcional)</span>
           <textarea
             name="notes"
@@ -301,16 +348,39 @@ export function AppointmentBookingForm({
           />
         </label>
 
-        <button className="button booking-submit" disabled={isSubmitting} type="submit">
-          {isSubmitting ? "Reservando..." : "Reservar"}
+        <button className="button booking-submit" disabled={isSubmitting || Boolean(pendingMercadoPagoPayment)} type="submit">
+          {isSubmitting
+            ? "Reservando..."
+            : selectedPaymentMethod === "mercadopago"
+              ? "Reservar y pagar"
+              : "Reservar"}
         </button>
+        {pendingMercadoPagoPayment ? (
+          <small className="booking-submit-help">Para reservar otro turno, tocá otro horario verde.</small>
+        ) : null}
       </form>
 
       {submitState.kind === "success" ? (
         <div ref={successRef} className="booking-feedback booking-feedback--success">
           <strong>Turno reservado correctamente.</strong>
-          <span>Te enviamos la confirmación por WhatsApp.</span>
-          <span>Gracias por reservar, nos vemos en tu horario.</span>
+          <span>Recibiste la confirmación por WhatsApp.</span>
+          <span>
+            {pendingMercadoPagoPayment
+              ? "Ahora completá el pago para finalizar tu reserva."
+              : "Gracias por reservar, nos vemos en tu horario."}
+          </span>
+        </div>
+      ) : null}
+
+      {pendingMercadoPagoPayment ? (
+        <div ref={paymentRef}>
+          <MercadoPagoPaymentBrick
+            tenantId={tenantId}
+            tenantSlug={tenantSlug}
+            appointmentId={pendingMercadoPagoPayment.appointmentId}
+            serviceName={pendingMercadoPagoPayment.serviceName}
+            priceInArs={pendingMercadoPagoPayment.priceInArs}
+          />
         </div>
       ) : null}
 

@@ -22,6 +22,8 @@ export class CreateBarbershopAppointmentController {
         serviceName: body.serviceName,
         startsAt: new Date(body.startsAt),
         durationInMinutes: body.durationInMinutes,
+        priceInArs: body.priceInArs,
+        paymentMethod: body.paymentMethod,
         notes: body.notes,
       });
 

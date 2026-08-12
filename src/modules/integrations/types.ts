@@ -13,6 +13,19 @@ export interface MercadoPagoConfig {
   publicKey: string;
 }
 
+export function isMercadoPagoConfig(value: unknown): value is MercadoPagoConfig {
+  if (typeof value !== "object" || value === null) return false;
+  const config = value as Record<string, unknown>;
+  return (
+    typeof config.accessToken === "object" &&
+    config.accessToken !== null &&
+    typeof (config.accessToken as EncryptedValue).encrypted === "string" &&
+    typeof (config.accessToken as EncryptedValue).iv === "string" &&
+    typeof (config.accessToken as EncryptedValue).authTag === "string" &&
+    typeof config.publicKey === "string"
+  );
+}
+
 export function isWhatsAppConfig(value: unknown): value is WhatsAppConfig {
   if (typeof value !== "object" || value === null) return false;
   const config = value as Record<string, unknown>;

@@ -16,9 +16,9 @@ import {
 
 function buildFeaturedServices(): FeaturedBarbershopService[] {
   return [
-    { name: "corte", durationInMinutes: 60, priceInArs: 15 },
-    { name: "barba", durationInMinutes: 30, priceInArs: 10 },
-    { name: "combo", durationInMinutes: 90, priceInArs: 20 },
+    { name: "corte", durationInMinutes: 60, priceInArs: 15000 },
+    { name: "barba", durationInMinutes: 30, priceInArs: 10000 },
+    { name: "combo", durationInMinutes: 90, priceInArs: 20000 },
   ];
 }
 

@@ -1,5 +1,8 @@
 import { DomainError } from "../../../../core/shared/domain/DomainError";
 
+export type BarbershopAppointmentPaymentMethod = "cash" | "mercadopago";
+export type BarbershopAppointmentPaymentStatus = "not_required" | "pending" | "paid" | "failed";
+
 export interface BarbershopAppointmentProps {
   id: string;
   tenantId: string;
@@ -10,6 +13,8 @@ export interface BarbershopAppointmentProps {
   durationInMinutes: number;
   status: "scheduled" | "completed" | "cancelled";
   notes?: string;
+  paymentMethod: BarbershopAppointmentPaymentMethod;
+  paymentStatus: BarbershopAppointmentPaymentStatus;
 }
 
 export class BarbershopAppointment {

@@ -94,8 +94,10 @@ export class CreateBarbershopAppointmentService
       throw new DomainError("The barber already has an appointment at that time");
     }
 
+    const appointmentId = crypto.randomUUID();
+
     const appointment = BarbershopAppointment.create({
-      id: crypto.randomUUID(),
+      id: appointmentId,
       tenantId: command.tenantId,
       customerId: customer.toPrimitives().id,
       barberId: command.barberId,
@@ -104,6 +106,8 @@ export class CreateBarbershopAppointmentService
       durationInMinutes: command.durationInMinutes,
       status: "scheduled",
       notes: command.notes,
+      paymentMethod: command.paymentMethod,
+      paymentStatus: command.paymentMethod === "mercadopago" ? "pending" : "not_required",
     });
 
     await this.appointmentRepository.save(appointment);
@@ -120,6 +124,7 @@ export class CreateBarbershopAppointmentService
           serviceName: this.resolveServiceName(command),
           startsAtIso: command.startsAt.toISOString(),
           notes: command.notes,
+          paymentMethod: command.paymentMethod === "mercadopago" ? "MercadoPago" : "Efectivo",
         },
       });
     } catch (error) {

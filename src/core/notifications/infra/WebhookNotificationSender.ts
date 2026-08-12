@@ -46,18 +46,20 @@ export class WebhookNotificationSender implements NotificationSender {
       formatAppointmentDateTime(message.metadata?.startsAtIso) || "Fecha no disponible";
     const notes = message.metadata?.notes || "Sin nota";
     const customerPhone = message.metadata?.customerPhoneNumber || "N/A";
+    const paymentMethod = message.metadata?.paymentMethod || "Efectivo";
+    const serviceNameWithPayment = `${serviceName} · Pago: ${paymentMethod}`;
 
     const results = await Promise.allSettled([
       this.sendTemplate(this.recipientPhoneNumber, "barbershop_appointment", [
         customerName,
-        serviceName,
+        serviceNameWithPayment,
         appointmentDateTime,
         customerPhone,
         notes,
       ]),
       this.sendTemplate(message.recipient, "confirmacion_reserva_barberia", [
         customerName,
-        serviceName,
+        serviceNameWithPayment,
         appointmentDateTime,
         this.recipientPhoneNumber,
       ]),

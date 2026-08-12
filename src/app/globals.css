@@ -223,6 +223,20 @@ select {
   transform: translateY(-1px);
 }
 
+.button:disabled,
+.button[aria-disabled="true"] {
+  background: rgba(38, 45, 36, 0.22);
+  border-color: rgba(24, 26, 23, 0.08);
+  color: rgba(24, 26, 23, 0.45);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.button:disabled:hover,
+.button[aria-disabled="true"]:hover {
+  transform: none;
+}
+
 .button-secondary {
   background: rgba(255, 255, 255, 0.9);
   border-color: var(--border);
@@ -268,16 +282,16 @@ select {
   gap: 1rem;
 }
 
-.section-heading h2,
-.tenant-card h2,
-.cta-card h2 {
+.section-heading :where(h2),
+.tenant-card :where(h2),
+.cta-card :where(h2) {
   margin: 0;
   font-size: clamp(1.8rem, 2.4vw, 2.8rem);
 }
 
-.section-heading p,
-.tenant-card p,
-.cta-card p {
+.section-heading :where(p),
+.tenant-card :where(p),
+.cta-card :where(p) {
   margin: 0.5rem 0 0;
   color: var(--muted);
   line-height: 1.65;
@@ -293,8 +307,8 @@ select {
   padding: 1.4rem;
 }
 
-.feature-card h3,
-.tenant-card h3 {
+.feature-card :where(h3),
+.tenant-card :where(h3) {
   margin-top: 0;
   margin-bottom: 0.6rem;
   font-size: 1.2rem;
@@ -578,6 +592,39 @@ select {
   width: 100%;
 }
 
+.booking-submit-help {
+  color: rgba(24, 26, 23, 0.62);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.mercadopago-brick-wrapper {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0.25rem 0 0;
+  overflow-x: auto;
+  scroll-margin-top: 1rem;
+}
+
+.mercadopago-brick-wrapper > div {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.mercadopago-brick-wrapper [style*="nowrap"] {
+  white-space: normal !important;
+}
+
+.mercadopago-brick-status {
+  color: rgba(24, 26, 23, 0.62);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
 .booking-feedback {
   display: grid;
   gap: 0.35rem;
@@ -835,7 +882,18 @@ select {
     padding: 1.35rem;
   }
 
+  .booking-card {
+    padding: 0.9rem;
+  }
+
   .display-title {
     font-size: clamp(2.3rem, 11vw, 3.3rem);
+  }
+}
+
+@media (min-width: 641px) {
+  .mercadopago-brick-wrapper {
+    max-width: 624px;
+    margin: 0.25rem 0 0;
   }
 }

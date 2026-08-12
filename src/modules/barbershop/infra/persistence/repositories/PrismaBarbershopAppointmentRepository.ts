@@ -48,6 +48,8 @@ export class PrismaBarbershopAppointmentRepository
         durationInMinutes: props.durationInMinutes,
         status: props.status.toUpperCase() as "SCHEDULED" | "COMPLETED" | "CANCELLED",
         notes: props.notes,
+        paymentMethod: props.paymentMethod,
+        paymentStatus: props.paymentStatus,
       },
     });
   }

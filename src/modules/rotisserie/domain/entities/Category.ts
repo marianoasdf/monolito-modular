@@ -5,6 +5,7 @@ export interface CategoryProps {
   tenantId: string;
   name: string;
   sortOrder: number;
+  isAvailable: boolean;
 }
 
 export class Category {

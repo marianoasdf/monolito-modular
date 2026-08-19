@@ -2,6 +2,10 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
+function normalizeCatalogName(name) {
+  return name.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
 const tenants = [
   {
     id: "tenant_crown_001",
@@ -224,6 +228,7 @@ async function seedRotisserie() {
         id: category.id,
         tenantId: rotisserieTenant.id,
         name: category.name,
+        normalizedName: normalizeCatalogName(category.name),
         sortOrder: category.sortOrder,
       },
     });
@@ -237,6 +242,7 @@ async function seedRotisserie() {
           tenantId: rotisserieTenant.id,
           categoryId: category.id,
           name: product.name,
+          normalizedName: normalizeCatalogName(product.name),
           description: product.description,
           priceInCents: product.priceInCents,
           sortOrder: product.sortOrder,
@@ -311,6 +317,7 @@ async function seedYoni247() {
         id: category.id,
         tenantId: yoni247Tenant.id,
         name: category.name,
+        normalizedName: normalizeCatalogName(category.name),
         sortOrder: category.sortOrder,
       },
     });
@@ -318,18 +325,13 @@ async function seedYoni247() {
     for (const product of category.products) {
       await prisma.rotisserieProduct.upsert({
         where: { id: product.id },
-        update: {
-          categoryId: category.id,
-          name: product.name,
-          description: product.description,
-          priceInCents: product.priceInCents,
-          sortOrder: product.sortOrder,
-        },
+        update: {},
         create: {
           id: product.id,
           tenantId: yoni247Tenant.id,
           categoryId: category.id,
           name: product.name,
+          normalizedName: normalizeCatalogName(product.name),
           description: product.description,
           priceInCents: product.priceInCents,
           sortOrder: product.sortOrder,

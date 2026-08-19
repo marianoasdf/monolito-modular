@@ -34,6 +34,7 @@ export class PrismaProductRepository implements ProductRepository {
       where: {
         tenantId,
         isAvailable: true,
+        category: { isAvailable: true },
         OR: [{ stockQuantity: null }, { stockQuantity: { gt: 0 } }],
       },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -55,6 +56,7 @@ export class PrismaProductRepository implements ProductRepository {
         tenantId: input.tenantId,
         id: { in: input.productIds },
         isAvailable: true,
+        category: { isAvailable: true },
         OR: [{ stockQuantity: null }, { stockQuantity: { gt: 0 } }],
       },
     });

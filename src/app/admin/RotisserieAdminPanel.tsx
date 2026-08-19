@@ -1,19 +1,24 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "../../core/shared/infra/prisma/prismaClient";
-import { loginAdminAction, logoutAdminAction, saveRotisserieAdminAction } from "./actions";
+import { AdminItemActions } from "./AdminItemActions";
+import {
+  createRotisserieCategoryAction,
+  createRotisserieProductAction,
+  deleteRotisserieCategoryAction,
+  deleteRotisserieProductAction,
+  loginAdminAction,
+  logoutAdminAction,
+  moveRotisserieProductAction,
+  reorderRotisserieCategoryAction,
+  reorderRotisserieProductAction,
+  saveRotisserieAdminAction,
+  toggleRotisserieCategoryVisibilityAction,
+  toggleRotisserieProductVisibilityAction,
+} from "./actions";
 import { isAdminAuthenticated } from "./auth";
 
 type AdminQuery = Record<string, string | string[] | undefined>;
-
-function formatArs(priceInCents: number): string {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(priceInCents / 100);
-}
 
 function readQuery(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -31,13 +36,21 @@ export async function RotisserieAdminPanel({
   const authenticated = await isAdminAuthenticated(tenantSlug);
   const error = readQuery(query.error);
   const saved = readQuery(query.saved);
+  const moved = readQuery(query.moved);
 
   const tenant = await prisma.tenant.findUnique({
     where: { slug: tenantSlug },
     include: {
       rotisserieSettings: true,
-      rotisserieProducts: {
-        include: { category: true },
+      rotisserieCategories: {
+        include: {
+          products: {
+            orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+          },
+          _count: {
+            select: { products: true },
+          },
+        },
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       },
     },
@@ -47,27 +60,14 @@ export async function RotisserieAdminPanel({
     notFound();
   }
 
-  const productsByCategory = tenant.rotisserieProducts.reduce(
-    (groups, product) => {
-      const current = groups.get(product.category.id) ?? {
-        id: product.category.id,
-        name: product.category.name,
-        products: [],
-      };
-      current.products.push(product);
-      groups.set(product.category.id, current);
-      return groups;
-    },
-    new Map<
-      string,
-      {
-        id: string;
-        name: string;
-        products: typeof tenant.rotisserieProducts;
-      }
-    >(),
-  );
-  const productCategories = [...productsByCategory.values()];
+  const productCategories = tenant.rotisserieCategories;
+  const errorMessages: Record<string, string> = {
+    "category-limit": "No podés crear más de 30 categorías en la carta.",
+    "category-not-empty": "No se puede eliminar una categoría con productos. Primero mové o eliminá sus productos.",
+    "category-product-limit": "No podés crear más de 50 productos en una misma categoría.",
+    "duplicate-catalog-name": "Ya existe un producto o una categoría con ese nombre.",
+    "product-limit": "No podés tener más de 300 productos en la carta.",
+  };
 
   if (!authenticated) {
     return (
@@ -112,7 +112,9 @@ export async function RotisserieAdminPanel({
         </div>
 
         {error === "auth" ? <div className="booking-feedback booking-feedback--error"><strong>Volvé a iniciar sesión.</strong></div> : null}
+        {error && errorMessages[error] ? <div className="booking-feedback booking-feedback--error"><strong>{errorMessages[error]}</strong></div> : null}
         {saved === "1" ? <div className="booking-feedback booking-feedback--success"><strong>Cambios guardados.</strong></div> : null}
+        {moved ? <div className="booking-feedback booking-feedback--success"><strong>{`Producto movido a ${moved}.`}</strong></div> : null}
 
         <form action={saveRotisserieAdminAction} className="admin-form">
           <input name="tenantSlug" type="hidden" value={tenantSlug} />
@@ -124,39 +126,235 @@ export async function RotisserieAdminPanel({
           </label>
 
           <section className="admin-appointments">
-            <h2 className="admin-section-title">Productos</h2>
+            <h2 className="admin-section-title">Categorías y productos</h2>
             <div className="rotisserie-admin-category-list">
-              {productCategories.map((category) => (
+              {productCategories.map((category, categoryIndex) => (
                 <article key={category.id} className="rotisserie-admin-category">
-                  <h3>{category.name}</h3>
+                  <input name={`categoryId:${category.id}`} type="hidden" value={category.id} />
+                  <div className="rotisserie-admin-item rotisserie-admin-item--category">
+                    <div className="rotisserie-admin-item-header">
+                      <div className="rotisserie-admin-item-title">
+                        <input
+                          aria-label="Nombre de la categoría"
+                          className="rotisserie-admin-title-input"
+                          defaultValue={category.name}
+                          maxLength={120}
+                          name={`categoryName:${category.id}`}
+                          required
+                          type="text"
+                        />
+                        <span>{category._count.products === 1 ? "1 producto" : `${category._count.products} productos`}</span>
+                      </div>
+                      <div className="rotisserie-admin-item-actions">
+                        <input name={`categorySort:${category.id}`} type="hidden" value={category.sortOrder} />
+                        <div className="rotisserie-admin-reorder">
+                          <button
+                            aria-label="Subir categoría"
+                            disabled={categoryIndex === 0}
+                            formAction={reorderRotisserieCategoryAction.bind(null, category.id, "up")}
+                            type="submit"
+                          >
+                            ↑
+                          </button>
+                          <button
+                            aria-label="Bajar categoría"
+                            disabled={categoryIndex === productCategories.length - 1}
+                            formAction={reorderRotisserieCategoryAction.bind(null, category.id, "down")}
+                            type="submit"
+                          >
+                            ↓
+                          </button>
+                        </div>
+                        <span className="rotisserie-admin-switch-label">Visible en carta</span>
+                        <input name={`categoryAvailable:${category.id}`} type="hidden" value={category.isAvailable ? "yes" : "no"} />
+                        <button
+                          aria-pressed={category.isAvailable}
+                          className={`rotisserie-admin-switch ${category.isAvailable ? "rotisserie-admin-switch--on" : ""}`}
+                          formAction={toggleRotisserieCategoryVisibilityAction.bind(null, category.id)}
+                          type="submit"
+                        >
+                          <span>{category.isAvailable ? "Sí" : "No"}</span>
+                        </button>
+                        <AdminItemActions
+                          deleteAction={deleteRotisserieCategoryAction.bind(null, category.id)}
+                          deleteBlockedReason={category._count.products > 0 ? "Esta categoría todavía tiene productos. Primero movélos o eliminálos." : undefined}
+                          deleteMessage="Se elimina la categoría de la carta."
+                          deleteWarning="Esta acción no se puede deshacer."
+                          itemLabel="categoría"
+                          itemName={category.name}
+                        />
+                      </div>
+                    </div>
+                  </div>
                   <div className="admin-appointments-list">
-                    {category.products.map((product) => (
-                      <div key={product.id} className="admin-appointment-card rotisserie-admin-product-card">
-                        <div className="admin-appointment-info">
-                          <strong>{product.name}</strong>
-                          <span>{formatArs(product.priceInCents)}</span>
+                    {category.products.map((product, productIndex) => (
+                      <div key={product.id} className="rotisserie-admin-item">
+                        <div className="rotisserie-admin-item-header">
+                          <div className="rotisserie-admin-item-title">
+                            <input
+                              aria-label="Nombre del producto"
+                              className="rotisserie-admin-title-input"
+                              defaultValue={product.name}
+                              maxLength={160}
+                              name={`name:${product.id}`}
+                              required
+                              type="text"
+                            />
+                            <div className="rotisserie-admin-title-meta">
+                              <div className="rotisserie-admin-price">
+                                <span>$</span>
+                                <input
+                                  aria-label="Precio"
+                                  defaultValue={product.priceInCents / 100}
+                                  min="0"
+                                  name={`price:${product.id}`}
+                                  step="100"
+                                  type="number"
+                                />
+                              </div>
+                              <span className="rotisserie-admin-meta-sep">·</span>
+                              <div className="rotisserie-admin-inline-field" title="Vacío = sin límite de stock">
+                                <input
+                                  aria-label="Stock"
+                                  defaultValue={product.stockQuantity ?? ""}
+                                  min="0"
+                                  name={`stock:${product.id}`}
+                                  placeholder="∞"
+                                  type="number"
+                                />
+                                <span>en stock</span>
+                              </div>
+                              {product.stockQuantity === 0 ? <span className="rotisserie-admin-chip">Sin stock</span> : null}
+                            </div>
+                          </div>
+                          <div className="rotisserie-admin-item-actions">
+                            <input name={`sort:${product.id}`} type="hidden" value={product.sortOrder} />
+                            <div className="rotisserie-admin-reorder">
+                              <button
+                                aria-label="Subir producto"
+                                disabled={productIndex === 0}
+                                formAction={reorderRotisserieProductAction.bind(null, product.id, "up")}
+                                type="submit"
+                              >
+                                ↑
+                              </button>
+                              <button
+                                aria-label="Bajar producto"
+                                disabled={productIndex === category.products.length - 1}
+                                formAction={reorderRotisserieProductAction.bind(null, product.id, "down")}
+                                type="submit"
+                              >
+                                ↓
+                              </button>
+                            </div>
+                            <span className="rotisserie-admin-switch-label">Visible en carta</span>
+                            <input name={`available:${product.id}`} type="hidden" value={product.isAvailable ? "yes" : "no"} />
+                            <button
+                              aria-pressed={product.isAvailable}
+                              className={`rotisserie-admin-switch ${product.isAvailable ? "rotisserie-admin-switch--on" : ""}`}
+                              formAction={toggleRotisserieProductVisibilityAction.bind(null, product.id)}
+                              type="submit"
+                            >
+                              <span>{product.isAvailable ? "Sí" : "No"}</span>
+                            </button>
+                            <AdminItemActions
+                              deleteAction={deleteRotisserieProductAction.bind(null, product.id)}
+                              deleteMessage="Perdés el precio y el stock configurados."
+                              deleteWarning="Esta acción no se puede deshacer."
+                              itemLabel="producto"
+                              itemName={product.name}
+                              move={{
+                                action: moveRotisserieProductAction.bind(null, product.id),
+                                currentId: product.categoryId,
+                                fieldName: `moveCategory:${product.id}`,
+                                options: productCategories.map((option) => ({ id: option.id, name: option.name })),
+                              }}
+                            />
+                          </div>
                         </div>
                         <input name={`productId:${product.id}`} type="hidden" value={product.id} />
-                        <label className="booking-field">
-                          <span>Precio</span>
-                          <input name={`price:${product.id}`} type="number" min="0" step="100" defaultValue={product.priceInCents / 100} />
-                        </label>
-                        <label className="booking-field">
-                          <span>Stock</span>
-                          <input name={`stock:${product.id}`} type="number" min="0" placeholder="Sin límite" defaultValue={product.stockQuantity ?? ""} />
-                        </label>
-                        <label className="booking-field">
-                          <span>Disponible</span>
-                          <select name={`available:${product.id}`} defaultValue={product.isAvailable ? "yes" : "no"}>
-                            <option value="yes">Sí</option>
-                            <option value="no">No</option>
-                          </select>
-                        </label>
+                        <input name={`category:${product.id}`} type="hidden" value={product.categoryId} />
+                        <div className="rotisserie-admin-fields">
+                          <label className="booking-field rotisserie-admin-field--wide">
+                            <span>Descripción</span>
+                            <input name={`description:${product.id}`} type="text" maxLength={240} defaultValue={product.description ?? ""} />
+                          </label>
+                        </div>
                       </div>
                     ))}
+                    <div className="rotisserie-admin-item rotisserie-admin-item--new" key={`new-product-${category.id}-${category.products.length}`}>
+                      <div className="rotisserie-admin-item-header">
+                        <div className="rotisserie-admin-item-title">
+                          <input
+                            aria-label="Nombre del producto"
+                            autoComplete="off"
+                            className="rotisserie-admin-title-input"
+                            defaultValue=""
+                            maxLength={160}
+                            name={`newProductName:${category.id}`}
+                            placeholder="Nuevo producto"
+                            type="text"
+                          />
+                          <div className="rotisserie-admin-title-meta">
+                            <div className="rotisserie-admin-price">
+                              <span>$</span>
+                              <input aria-label="Precio" autoComplete="off" defaultValue="" min="0" name={`newProductPrice:${category.id}`} step="100" type="number" />
+                            </div>
+                            <span className="rotisserie-admin-meta-sep">·</span>
+                            <div className="rotisserie-admin-inline-field" title="Vacío = sin límite de stock">
+                              <input aria-label="Stock" autoComplete="off" defaultValue="" min="0" name={`newProductStock:${category.id}`} placeholder="∞" type="number" />
+                              <span>en stock</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="rotisserie-admin-item-actions">
+                          <button
+                            className="button rotisserie-admin-add-button"
+                            formAction={createRotisserieProductAction.bind(null, category.id)}
+                            type="submit"
+                          >
+                            Agregar
+                          </button>
+                        </div>
+                      </div>
+                      <div className="rotisserie-admin-fields">
+                        <label className="booking-field rotisserie-admin-field--wide">
+                          <span>Descripción</span>
+                          <input autoComplete="off" defaultValue="" name={`newProductDescription:${category.id}`} type="text" maxLength={240} />
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 </article>
               ))}
+              <article className="rotisserie-admin-category" key={`new-category-${productCategories.length}`}>
+                <div className="rotisserie-admin-item rotisserie-admin-item--new">
+                  <input name="newCategorySort" type="hidden" value={productCategories.length + 1} />
+                  <div className="rotisserie-admin-item-header">
+                    <div className="rotisserie-admin-item-title">
+                      <input
+                        aria-label="Nombre de la categoría"
+                        autoComplete="off"
+                        className="rotisserie-admin-title-input"
+                        defaultValue=""
+                        maxLength={120}
+                        name="newCategoryName"
+                        placeholder="Nueva categoría"
+                        type="text"
+                      />
+                    </div>
+                    <div className="rotisserie-admin-item-actions">
+                      <button
+                        className="button rotisserie-admin-add-button"
+                        formAction={createRotisserieCategoryAction}
+                        type="submit"
+                      >
+                        Agregar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </article>
             </div>
           </section>
 

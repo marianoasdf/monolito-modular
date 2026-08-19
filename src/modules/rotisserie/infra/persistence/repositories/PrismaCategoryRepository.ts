@@ -7,7 +7,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
 
   async listByTenant(tenantId: string): Promise<Category[]> {
     const rows = await this.prismaClient.rotisserieCategory.findMany({
-      where: { tenantId },
+      where: { tenantId, isAvailable: true },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     });
 
@@ -17,6 +17,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
         tenantId: row.tenantId,
         name: row.name,
         sortOrder: row.sortOrder,
+        isAvailable: row.isAvailable,
       }),
     );
   }

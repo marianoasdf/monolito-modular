@@ -444,10 +444,411 @@ select {
   font-size: 1.05rem;
 }
 
-.rotisserie-admin-product-card {
-  align-items: stretch;
+.rotisserie-admin-item {
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
   display: grid;
-  grid-template-columns: minmax(12rem, 1fr) repeat(3, minmax(8rem, 0.55fr));
+  gap: 0.85rem;
+  padding: 1rem;
+}
+
+.rotisserie-admin-item--category {
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface-strong));
+}
+
+.rotisserie-admin-item--new {
+  border-style: dashed;
+}
+
+.rotisserie-admin-add-button {
+  font-size: 0.88rem;
+  padding: 0.45rem 0.85rem;
+  white-space: nowrap;
+}
+
+.rotisserie-admin-title-input::placeholder,
+.rotisserie-admin-price input::placeholder,
+.rotisserie-admin-inline-field input::placeholder {
+  color: var(--muted);
+  opacity: 0.65;
+}
+
+.rotisserie-admin-item-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.rotisserie-admin-item-title {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.rotisserie-admin-item-title strong {
+  font-size: 1rem;
+}
+
+.rotisserie-admin-item-title > span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.rotisserie-admin-title-input {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: -0.3rem -0.45rem;
+  padding: 0.3rem 0.45rem;
+  width: min(22rem, 100%);
+}
+
+.rotisserie-admin-title-input:hover {
+  border-color: var(--border);
+}
+
+.rotisserie-admin-title-input:focus {
+  background: var(--surface);
+  border-color: var(--accent);
+  outline: none;
+}
+
+.rotisserie-admin-title-meta {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.rotisserie-admin-price,
+.rotisserie-admin-inline-field {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  color: var(--muted);
+  display: inline-flex;
+  gap: 0.2rem;
+  padding: 0.15rem 0.35rem;
+}
+
+.rotisserie-admin-price:hover,
+.rotisserie-admin-inline-field:hover {
+  border-color: var(--border);
+}
+
+.rotisserie-admin-price:focus-within,
+.rotisserie-admin-inline-field:focus-within {
+  background: var(--surface);
+  border-color: var(--accent);
+}
+
+.rotisserie-admin-price span,
+.rotisserie-admin-inline-field span {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.rotisserie-admin-price span {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.rotisserie-admin-price input,
+.rotisserie-admin-inline-field input {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0;
+  width: 5.5rem;
+}
+
+.rotisserie-admin-inline-field input {
+  text-align: right;
+  width: 3.2rem;
+}
+
+.rotisserie-admin-price input:focus,
+.rotisserie-admin-inline-field input:focus {
+  outline: none;
+}
+
+.rotisserie-admin-meta-sep {
+  color: var(--border);
+  font-weight: 700;
+}
+
+.rotisserie-admin-chip {
+  background: color-mix(in srgb, #b4232a 12%, transparent);
+  border-radius: 999px;
+  color: #b4232a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+}
+
+.rotisserie-admin-reorder {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.rotisserie-admin-reorder button {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.9rem;
+  height: 2.2rem;
+  justify-content: center;
+  width: 2rem;
+}
+
+.rotisserie-admin-reorder button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  color: var(--text);
+}
+
+.rotisserie-admin-reorder button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.rotisserie-admin-suffix-field {
+  align-items: center;
+  display: flex;
+  gap: 0.4rem;
+}
+
+.rotisserie-admin-suffix-field input {
+  width: 100%;
+}
+
+.rotisserie-admin-suffix-field span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.rotisserie-admin-item-actions {
+  align-items: center;
+  display: flex;
+  gap: 0.6rem;
+  margin-left: auto;
+}
+
+.rotisserie-admin-switch-label {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.rotisserie-admin-fields {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+
+.rotisserie-admin-field--wide {
+  grid-column: 1 / -1;
+}
+
+.rotisserie-admin-switch {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-weight: 800;
+  height: 2.2rem;
+  justify-content: flex-start;
+  padding: 0.2rem;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  width: 4.4rem;
+}
+
+.rotisserie-admin-switch span {
+  align-items: center;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.8rem;
+  height: 1.7rem;
+  justify-content: center;
+  transition: transform 0.2s ease;
+  width: 2rem;
+}
+
+.rotisserie-admin-switch--on {
+  background: color-mix(in srgb, var(--accent) 24%, var(--surface));
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.rotisserie-admin-switch--on span {
+  transform: translateX(1.9rem);
+}
+
+.admin-actions-menu {
+  position: relative;
+}
+
+.admin-actions-menu-trigger {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 1.1rem;
+  height: 2.2rem;
+  justify-content: center;
+  line-height: 1;
+  width: 2.2rem;
+}
+
+.admin-actions-menu-trigger:hover {
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+}
+
+.admin-actions-menu-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+  display: grid;
+  min-width: 11.5rem;
+  padding: 0.3rem;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.4rem);
+  z-index: 5;
+}
+
+.admin-actions-menu-item {
+  background: transparent;
+  border: none;
+  border-radius: 0.45rem;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.88rem;
+  padding: 0.5rem 0.6rem;
+  text-align: left;
+  width: 100%;
+}
+
+.admin-actions-menu-item:hover {
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+}
+
+.admin-actions-menu-item--danger {
+  color: #b4232a;
+}
+
+.admin-actions-menu-item--danger:hover {
+  background: color-mix(in srgb, #b4232a 9%, transparent);
+}
+
+.admin-dialog {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.24);
+  color: var(--text);
+  max-width: 26rem;
+  padding: 0;
+  width: min(26rem, calc(100vw - 2rem));
+}
+
+.admin-dialog::backdrop {
+  background: rgba(15, 15, 15, 0.45);
+}
+
+.admin-dialog-body {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.4rem;
+}
+
+.admin-dialog-body h3 {
+  font-size: 1.05rem;
+}
+
+.admin-dialog-body .admin-dialog-text {
+  color: var(--text);
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.admin-dialog-body .admin-dialog-text strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.admin-dialog-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  margin-top: 0.35rem;
+}
+
+.admin-dialog-cancel {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.5rem 0.95rem;
+}
+
+.admin-dialog-cancel:hover {
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+}
+
+.admin-dialog-cancel--default {
+  border-color: var(--text);
+  border-width: 2px;
+  font-weight: 700;
+}
+
+.admin-dialog-cancel--default:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--text) 25%, transparent);
+  outline-offset: 2px;
+}
+
+.admin-dialog-confirm {
+  background: #b4232a;
+  border: 1px solid #b4232a;
+  border-radius: 0.65rem;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.5rem 0.95rem;
+}
+
+.admin-dialog-confirm:disabled {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .agenda-intro {

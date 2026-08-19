@@ -128,36 +128,41 @@ model RotisserieTenantSettings {
 }
 
 model RotisserieCategory {
-  id        String   @id @default(cuid())
-  tenantId  String
-  name      String
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  tenant    Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  products  RotisserieProduct[]
+  id             String   @id @default(cuid())
+  tenantId       String
+  name           String
+  normalizedName String
+  sortOrder      Int      @default(0)
+  isAvailable    Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  tenant         Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products       RotisserieProduct[]
 
   @@unique([tenantId, id])
+  @@unique([tenantId, normalizedName])
   @@index([tenantId])
   @@map("rotisserie_categories")
 }
 
 model RotisserieProduct {
-  id           String   @id @default(cuid())
-  tenantId     String
-  categoryId   String
-  name         String
-  description  String?
-  priceInCents Int
-  stockQuantity Int?
-  isAvailable  Boolean  @default(true)
-  sortOrder    Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  tenant       Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  category     RotisserieCategory @relation(fields: [tenantId, categoryId], references: [tenantId, id], onDelete: Cascade)
+  id             String   @id @default(cuid())
+  tenantId       String
+  categoryId     String
+  name           String
+  normalizedName String
+  description    String?
+  priceInCents   Int
+  stockQuantity  Int?
+  isAvailable    Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  tenant         Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category       RotisserieCategory @relation(fields: [tenantId, categoryId], references: [tenantId, id], onDelete: Cascade)
 
   @@unique([tenantId, id])
+  @@unique([tenantId, normalizedName])
   @@index([tenantId])
   @@index([tenantId, categoryId])
   @@map("rotisserie_products")

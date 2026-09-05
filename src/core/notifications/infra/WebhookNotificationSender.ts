@@ -5,6 +5,12 @@ import {
 
 const ARGENTINA_TIME_ZONE = "America/Argentina/Buenos_Aires";
 
+function sanitizeTemplateTextParameter(value: string): string {
+  return value
+    .replace(/\r\n|\r|\n|\t/g, " ")
+    .replace(/ {5,}/g, "    ");
+}
+
 function formatAppointmentDateTime(isoDate: string | undefined): string | null {
   if (!isoDate) {
     return null;
@@ -44,7 +50,7 @@ export class WebhookNotificationSender implements NotificationSender {
     const serviceName = message.metadata?.serviceName || "Servicio";
     const appointmentDateTime =
       formatAppointmentDateTime(message.metadata?.startsAtIso) || "Fecha no disponible";
-    const notes = message.metadata?.notes || "Sin nota";
+    const notes = sanitizeTemplateTextParameter(message.metadata?.notes || "Sin nota");
     const customerPhone = message.metadata?.customerPhoneNumber || "N/A";
     const paymentMethod = message.metadata?.paymentMethod || "Efectivo";
     const serviceNameWithPayment = `${serviceName} · Pago: ${paymentMethod}`;

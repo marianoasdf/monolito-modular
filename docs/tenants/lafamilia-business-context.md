@@ -1,6 +1,6 @@
 # La Familia Rotisería y Viandas — Contexto de negocio
 
-> Información relevada con la dueña (jun 2026). Fuente de verdad del dominio para el módulo `rotisserie`.
+> Información relevada con la dueña (jun 2026). Fuente de verdad del dominio para el tenant `lafamilia`.
 > Capturado para las próximas fases. **Los datos del seed actual (`prisma/seed.js`) son placeholders**; la carta real está acá abajo.
 
 ## El negocio

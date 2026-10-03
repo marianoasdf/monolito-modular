@@ -102,7 +102,7 @@ const rotisserieTenant = {
 };
 
 // Carta real relevada del cartel del local (precios en centavos de ARS).
-// Ver src/modules/rotisserie/BUSINESS-CONTEXT.md
+// Ver docs/tenants/lafamilia-business-context.md
 const rotisserieCatalog = [
   {
     id: "rotcat_lafamilia_menu_dia",

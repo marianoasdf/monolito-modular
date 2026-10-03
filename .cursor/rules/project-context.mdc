@@ -1,0 +1,29 @@
+---
+description: Contexto permanente del monolito modular multi-tenant
+alwaysApply: true
+---
+
+# Contexto del proyecto
+
+Antes de cambiar código, leé `docs/ARCHITECTURE.md`, `docs/DECISIONS.md` y `docs/CURRENT_STATE.md`. El alta de tenants sigue `.cursor/rules/tenant-provisioning.mdc`.
+
+## Límites
+
+- Un Next.js 14 (App Router) y una PostgreSQL (`DATABASE_URL`). Imports relativos: no hay alias `@/`.
+- Verticales: `src/modules/barbershop` y `src/modules/rotisserie`. No hay módulo de gimnasio, modelo de usuarios ni contrato de pagos en `core`.
+- Capas del módulo: `domain` → `application` → `interface` → `infra`. El dominio no importa Next, Prisma ni HTTP.
+- `src/core` es solo transversal (tenancy, Prisma, notificaciones, crypto). Reglas de turno o pedido van al módulo.
+- Excepciones actuales, no un patrón a copiar: Mercado Pago en `src/app/api/barbershop/payments`, admin en `src/app/admin/actions.ts`, y `CreateOrderService` leyendo settings con Prisma directo.
+
+## Multi-tenant
+
+- Toda lectura o escritura de negocio filtra por `tenantId`, o por un slug resuelto a ese id en el servidor.
+- En APIs nuevas, resolvé el tenant en el servidor. No tomes el `tenantId` del cliente como fuente de verdad.
+- Hosts públicos: `src/app/publicTenantHosts.ts`. Si el tenant necesita rewrites como Yoni, actualizá también `next.config.js`.
+- Precios de rotisería en centavos de ARS. Agenda de barbería en `America/Argentina/Buenos_Aires`.
+- Tokens de WhatsApp y Mercado Pago van cifrados en `TenantIntegration.config`. No los commitees ni los dejes en claro. No pises la config de otro tenant.
+
+## Datos y seeds
+
+- Seed create-only: `upsert` con `update: {}` o skip. No reescribas settings, auth, horarios, teléfono ni carta de un tenant que ya existe, salvo pedido explícito.
+- Scripts de `scripts/` son provisioning puntual. No los mezcles con el seed general.

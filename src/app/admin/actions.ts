@@ -38,8 +38,39 @@ function parseOptionalNonNegativeInt(value: FormDataEntryValue | null): number |
   if (!raw) {
     return null;
   }
-  const parsed = Number(raw);
-  return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : null;
+  if (!/^\d+$/.test(raw)) {
+    return null;
+  }
+  return Number(raw);
+}
+
+function parsePesosToCents(value: FormDataEntryValue | null): number | null {
+  const raw = `${value ?? ""}`.trim().replace(/\s+/g, "").replace(/^\$/, "");
+  if (!raw) {
+    return null;
+  }
+
+  let normalized = raw;
+  if (/^\d{1,3}(\.\d{3})+$/.test(raw)) {
+    normalized = raw.replace(/\./g, "");
+  } else if (/^\d{1,3}(\.\d{3})+,\d{1,2}$/.test(raw)) {
+    normalized = raw.replace(/\./g, "").replace(",", ".");
+  } else if (/^\d+,\d{1,2}$/.test(raw)) {
+    normalized = raw.replace(",", ".");
+  } else if (!/^\d+(\.\d{1,2})?$/.test(raw)) {
+    return null;
+  }
+
+  const parsed = Number(normalized);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return null;
+  }
+
+  return Math.round(parsed * 100);
+}
+
+function parsePriceInCents(value: FormDataEntryValue | null): number {
+  return parsePesosToCents(value) ?? 0;
 }
 
 function parseSortOrder(value: FormDataEntryValue | null): number {
@@ -47,17 +78,20 @@ function parseSortOrder(value: FormDataEntryValue | null): number {
   return Number.isFinite(parsed) ? Math.floor(parsed) : 0;
 }
 
-function parsePriceInCents(value: FormDataEntryValue | null): number {
-  const parsed = Number(`${value || "0"}`);
-  return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed * 100) : 0;
-}
-
 function normalizeCatalogName(name: string): string {
   return name.trim().replace(/\s+/g, " ").toLowerCase();
 }
 
 function isUniqueError(error: unknown): boolean {
-  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    return true;
+  }
+
+  if (error && typeof error === "object" && "cause" in error) {
+    return isUniqueError((error as { cause: unknown }).cause);
+  }
+
+  return false;
 }
 
 function redirectCatalogError(basePath: string, error: string): never {
@@ -178,8 +212,11 @@ export async function saveAdminSettingsAction(formData: FormData): Promise<void>
 export async function saveRotisserieAdminAction(formData: FormData): Promise<void> {
   const { basePath, tenantSlug, tenantId } = await resolveAuthenticatedTenant(formData);
 
-  const deliveryFeeInPesos = Number(`${formData.get("deliveryFeeInPesos") || "0"}`);
-  const deliveryFeeInCents = Number.isFinite(deliveryFeeInPesos) && deliveryFeeInPesos >= 0 ? Math.round(deliveryFeeInPesos * 100) : 250000;
+  const deliveryFeeRaw = `${formData.get("deliveryFeeInPesos") ?? ""}`.trim();
+  const deliveryFeeInCents = deliveryFeeRaw ? parsePesosToCents(deliveryFeeRaw) : 0;
+  if (deliveryFeeInCents === null) {
+    redirectCatalogError(basePath, "invalid-amount");
+  }
 
   const categoryIds = [...formData.keys()]
     .filter((key) => key.startsWith("categoryId:"))
@@ -190,91 +227,246 @@ export async function saveRotisserieAdminAction(formData: FormData): Promise<voi
     .map((key) => `${formData.get(key) || ""}`)
     .filter(Boolean);
 
+  const categoryUpdates: Array<{
+    id: string;
+    name: string;
+    normalizedName: string;
+    sortOrder: number;
+    isAvailable: boolean;
+  }> = [];
+  const seenCategoryNames = new Set<string>();
+
+  for (const categoryId of categoryIds) {
+    const name = `${formData.get(`categoryName:${categoryId}`) || ""}`.trim();
+    const normalizedName = normalizeCatalogName(name);
+    if (!name || !normalizedName) {
+      continue;
+    }
+    if (seenCategoryNames.has(normalizedName)) {
+      redirectCatalogError(basePath, "duplicate-catalog-name");
+    }
+    seenCategoryNames.add(normalizedName);
+    categoryUpdates.push({
+      id: categoryId,
+      name,
+      normalizedName,
+      sortOrder: parseSortOrder(formData.get(`categorySort:${categoryId}`)),
+      isAvailable: `${formData.get(`categoryAvailable:${categoryId}`) || "yes"}` === "yes",
+    });
+  }
+
+  const productUpdates: Array<{
+    id: string;
+    categoryId: string;
+    name: string;
+    normalizedName: string;
+    description: string | null;
+    priceInCents: number;
+    stockQuantity: number | null;
+    sortOrder: number;
+    isAvailable: boolean;
+  }> = [];
+  const seenProductNames = new Set<string>();
+
+  for (const productId of productIds) {
+    const name = `${formData.get(`name:${productId}`) || ""}`.trim();
+    const normalizedName = normalizeCatalogName(name);
+    const categoryId = `${formData.get(`category:${productId}`) || ""}`;
+    if (!name || !normalizedName || !categoryId) {
+      continue;
+    }
+    if (seenProductNames.has(normalizedName)) {
+      redirectCatalogError(basePath, "duplicate-catalog-name");
+    }
+    seenProductNames.add(normalizedName);
+
+    const priceInCents = parsePesosToCents(formData.get(`price:${productId}`));
+    const stockRaw = `${formData.get(`stock:${productId}`) ?? ""}`.trim();
+    const stockQuantity = stockRaw ? parseOptionalNonNegativeInt(stockRaw) : null;
+    if (priceInCents === null || (stockRaw && stockQuantity === null)) {
+      redirectCatalogError(basePath, "invalid-amount");
+    }
+
+    productUpdates.push({
+      id: productId,
+      categoryId,
+      name,
+      normalizedName,
+      description: `${formData.get(`description:${productId}`) || ""}`.trim() || null,
+      priceInCents,
+      stockQuantity,
+      sortOrder: parseSortOrder(formData.get(`sort:${productId}`)),
+      isAvailable: `${formData.get(`available:${productId}`) || "yes"}` === "yes",
+    });
+  }
+
+  const [settings, existingCategories, existingProducts] = await Promise.all([
+    prisma.rotisserieTenantSettings.findUnique({
+      where: { tenantId },
+      select: { deliveryFeeInCents: true },
+    }),
+    prisma.rotisserieCategory.findMany({
+      where: { tenantId },
+      select: {
+        id: true,
+        name: true,
+        normalizedName: true,
+        sortOrder: true,
+        isAvailable: true,
+      },
+    }),
+    prisma.rotisserieProduct.findMany({
+      where: { tenantId },
+      select: {
+        id: true,
+        categoryId: true,
+        name: true,
+        normalizedName: true,
+        description: true,
+        priceInCents: true,
+        stockQuantity: true,
+        sortOrder: true,
+        isAvailable: true,
+      },
+    }),
+  ]);
+
+  const categoriesById = new Map(existingCategories.map((category) => [category.id, category]));
+  const productsById = new Map(existingProducts.map((product) => [product.id, product]));
+  const changedCategories = categoryUpdates.filter((category) => {
+    const current = categoriesById.get(category.id);
+    if (!current) {
+      return false;
+    }
+
+    return (
+      current.name !== category.name ||
+      current.normalizedName !== category.normalizedName ||
+      current.sortOrder !== category.sortOrder ||
+      current.isAvailable !== category.isAvailable
+    );
+  });
+
+  const writableProducts: typeof productUpdates = [];
+  const categoryMoves: Array<{ fromCategoryId: string; toCategoryId: string }> = [];
+
+  for (const product of productUpdates) {
+    const current = productsById.get(product.id);
+    const category = categoriesById.get(product.categoryId);
+    if (!current || !category) {
+      continue;
+    }
+
+    if (current.categoryId !== category.id) {
+      categoryMoves.push({ fromCategoryId: current.categoryId, toCategoryId: category.id });
+    }
+
+    if (
+      current.categoryId !== product.categoryId ||
+      current.name !== product.name ||
+      current.normalizedName !== product.normalizedName ||
+      current.description !== product.description ||
+      current.priceInCents !== product.priceInCents ||
+      current.stockQuantity !== product.stockQuantity ||
+      current.sortOrder !== product.sortOrder ||
+      current.isAvailable !== product.isAvailable
+    ) {
+      writableProducts.push(product);
+    }
+  }
+
+  const productsPerCategory = new Map<string, number>();
+  for (const product of existingProducts) {
+    productsPerCategory.set(product.categoryId, (productsPerCategory.get(product.categoryId) ?? 0) + 1);
+  }
+  for (const move of categoryMoves) {
+    productsPerCategory.set(move.fromCategoryId, (productsPerCategory.get(move.fromCategoryId) ?? 1) - 1);
+  }
+  for (const move of categoryMoves) {
+    const nextCount = (productsPerCategory.get(move.toCategoryId) ?? 0) + 1;
+    if (nextCount > 50) {
+      redirectCatalogError(basePath, "category-product-limit");
+    }
+    productsPerCategory.set(move.toCategoryId, nextCount);
+  }
+
+  const deliveryFeeChanged = settings?.deliveryFeeInCents !== deliveryFeeInCents;
+
   try {
-    await prisma.$transaction(async (tx) => {
-      await tx.rotisserieTenantSettings.upsert({
+    if (deliveryFeeChanged) {
+      await prisma.rotisserieTenantSettings.upsert({
         where: { tenantId },
         update: { deliveryFeeInCents },
         create: { tenantId, deliveryFeeInCents },
       });
+    }
 
-      for (const categoryId of categoryIds) {
-        const name = `${formData.get(`categoryName:${categoryId}`) || ""}`.trim();
-        const normalizedName = normalizeCatalogName(name);
-        const sortOrder = parseSortOrder(formData.get(`categorySort:${categoryId}`));
-        const isAvailable = `${formData.get(`categoryAvailable:${categoryId}`) || "yes"}` === "yes";
-
-        if (!name || !normalizedName) {
-          continue;
-        }
-
-        await tx.rotisserieCategory.updateMany({
-          where: { id: categoryId, tenantId },
-          data: { name, normalizedName, sortOrder, isAvailable },
-        });
+    for (const category of changedCategories) {
+      const current = categoriesById.get(category.id);
+      if (!current || current.normalizedName === category.normalizedName) {
+        continue;
       }
 
-      for (const productId of productIds) {
-        const name = `${formData.get(`name:${productId}`) || ""}`.trim();
-        const normalizedName = normalizeCatalogName(name);
-        const description = `${formData.get(`description:${productId}`) || ""}`.trim();
-        const categoryId = `${formData.get(`category:${productId}`) || ""}`;
-        const isAvailable = `${formData.get(`available:${productId}`) || "yes"}` === "yes";
+      await prisma.rotisserieCategory.updateMany({
+        where: { id: category.id, tenantId },
+        data: { normalizedName: `pending:${category.id}` },
+      });
+    }
 
-        if (!name || !normalizedName || !categoryId) {
-          continue;
-        }
+    for (const category of changedCategories) {
+      await prisma.rotisserieCategory.updateMany({
+        where: { id: category.id, tenantId },
+        data: {
+          name: category.name,
+          normalizedName: category.normalizedName,
+          sortOrder: category.sortOrder,
+          isAvailable: category.isAvailable,
+        },
+      });
+    }
 
-        const [category, currentProduct] = await Promise.all([
-          tx.rotisserieCategory.findFirst({
-            where: { id: categoryId, tenantId },
-            select: { id: true },
-          }),
-          tx.rotisserieProduct.findFirst({
-            where: { id: productId, tenantId },
-            select: { categoryId: true },
-          }),
-        ]);
-
-        if (!category || !currentProduct) {
-          continue;
-        }
-
-        if (currentProduct.categoryId !== category.id) {
-          const categoryProductCount = await tx.rotisserieProduct.count({ where: { tenantId, categoryId: category.id } });
-
-          if (categoryProductCount >= 50) {
-            redirectCatalogError(basePath, "category-product-limit");
-          }
-        }
-
-        await tx.rotisserieProduct.updateMany({
-          where: { id: productId, tenantId },
-          data: {
-            categoryId: category.id,
-            name,
-            normalizedName,
-            description: description || null,
-            priceInCents: parsePriceInCents(formData.get(`price:${productId}`)),
-            stockQuantity: parseOptionalNonNegativeInt(formData.get(`stock:${productId}`)),
-            sortOrder: parseSortOrder(formData.get(`sort:${productId}`)),
-            isAvailable,
-          },
-        });
+    for (const product of writableProducts) {
+      const current = productsById.get(product.id);
+      if (!current || current.normalizedName === product.normalizedName) {
+        continue;
       }
 
-    });
+      await prisma.rotisserieProduct.updateMany({
+        where: { id: product.id, tenantId },
+        data: { normalizedName: `pending:${product.id}` },
+      });
+    }
+
+    for (const product of writableProducts) {
+      await prisma.rotisserieProduct.updateMany({
+        where: { id: product.id, tenantId },
+        data: {
+          categoryId: product.categoryId,
+          name: product.name,
+          normalizedName: product.normalizedName,
+          description: product.description,
+          priceInCents: product.priceInCents,
+          stockQuantity: product.stockQuantity,
+          sortOrder: product.sortOrder,
+          isAvailable: product.isAvailable,
+        },
+      });
+    }
   } catch (error) {
     if (isUniqueError(error)) {
       redirectCatalogError(basePath, "duplicate-catalog-name");
     }
 
-    throw error;
+    console.error("Failed to save rotisserie admin", error);
+    redirectCatalogError(basePath, "save");
   }
 
-  revalidatePath("/");
-  revalidatePath(`/${tenantSlug}/rotisserie/carta`);
-  revalidatePath(basePath);
+  if (deliveryFeeChanged || changedCategories.length > 0 || writableProducts.length > 0) {
+    revalidatePath("/");
+    revalidatePath(`/${tenantSlug}/rotisserie/carta`);
+    revalidatePath(basePath);
+  }
+
   redirect(`${basePath}?saved=1`);
 }
 

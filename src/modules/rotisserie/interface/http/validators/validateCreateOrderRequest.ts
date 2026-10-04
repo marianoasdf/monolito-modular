@@ -1,5 +1,7 @@
+import { normalizeArgentinePhoneNumber } from "../../../domain/value-objects/normalizeArgentinePhoneNumber";
 import {
   FulfillmentType,
+  MAX_UNITS_PER_PRODUCT,
   PaymentMethod,
   isFulfillmentType,
   isPaymentMethod,
@@ -36,6 +38,18 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function readQuantity(value: unknown): number {
+  if (typeof value === "number") {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim() !== "") {
+    return Number(value);
+  }
+
+  return Number.NaN;
+}
+
 function readOptionalTrimmedString(value: unknown): string | undefined {
   if (typeof value !== "string") {
     return undefined;
@@ -60,53 +74,54 @@ export function validateCreateOrderRequest(value: unknown): ValidationResult {
   const paymentMethod = value.paymentMethod;
 
   if (!customerName || customerName.length > 120) {
-    errors.push("customerName is required and must be at most 120 characters");
+    errors.push("El nombre es obligatorio y puede tener hasta 120 caracteres.");
   }
 
-  if (!customerPhone || customerPhone.length > 40) {
-    errors.push("customerPhone is required and must be at most 40 characters");
+  if (!customerPhone) {
+    errors.push("El teléfono es obligatorio.");
+  } else if (!normalizeArgentinePhoneNumber(customerPhone)) {
+    errors.push("El teléfono no es válido. Usá un celular argentino, por ejemplo 3454200683.");
   }
 
   if (!isFulfillmentType(fulfillmentType)) {
-    errors.push("fulfillmentType must be 'pickup' or 'delivery'");
+    errors.push("Elegí retiro o delivery.");
   }
 
   if (fulfillmentType === "delivery" && (!deliveryAddress || deliveryAddress.length > 200)) {
-    errors.push("deliveryAddress is required for delivery and must be at most 200 characters");
+    errors.push("Para delivery, la dirección es obligatoria y puede tener hasta 200 caracteres.");
   }
 
   if (!isPaymentMethod(paymentMethod)) {
-    errors.push("paymentMethod must be 'cash' or 'transfer'");
+    errors.push("Elegí efectivo o transferencia.");
   }
 
-  if (notes && notes.length > 400) {
-    errors.push("notes must be at most 400 characters");
+  if (notes && notes.length > 300) {
+    errors.push("La nota puede tener hasta 300 caracteres.");
   }
 
   const items: CreateOrderHttpItem[] = [];
 
   if (!Array.isArray(value.items) || value.items.length === 0) {
-    errors.push("items must be a non-empty array");
+    errors.push("Agregá al menos un producto.");
   } else if (value.items.length > 100) {
-    errors.push("items must contain at most 100 entries");
+    errors.push("El pedido puede tener hasta 100 productos distintos.");
   } else {
     for (const rawItem of value.items) {
       if (!isRecord(rawItem)) {
-        errors.push("each item must be an object");
+        errors.push("Hay un producto inválido en el pedido.");
         break;
       }
 
       const productId = readOptionalTrimmedString(rawItem.productId);
-      const quantity =
-        typeof rawItem.quantity === "number" ? rawItem.quantity : Number.NaN;
+      const quantity = readQuantity(rawItem.quantity);
 
       if (!productId || productId.length > 80) {
-        errors.push("each item requires a valid productId");
+        errors.push("Falta identificar un producto del pedido.");
         break;
       }
 
-      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 50) {
-        errors.push("each item quantity must be an integer between 1 and 50");
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_UNITS_PER_PRODUCT) {
+        errors.push(`Podés pedir hasta ${MAX_UNITS_PER_PRODUCT} unidades de cada producto.`);
         break;
       }
 

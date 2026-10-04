@@ -66,7 +66,9 @@ export async function RotisserieAdminPanel({
     "category-not-empty": "No se puede eliminar una categoría con productos. Primero mové o eliminá sus productos.",
     "category-product-limit": "No podés crear más de 50 productos en una misma categoría.",
     "duplicate-catalog-name": "Ya existe un producto o una categoría con ese nombre.",
+    "invalid-amount": "Revisá precios, stock y valor de envío. Usá números como 2500 o 7.500.",
     "product-limit": "No podés tener más de 300 productos en la carta.",
+    save: "No se pudieron guardar los cambios. Probá de nuevo.",
   };
 
   if (!authenticated) {
@@ -122,7 +124,7 @@ export async function RotisserieAdminPanel({
 
           <label className="booking-field">
             <span>Valor de envío</span>
-            <input name="deliveryFeeInPesos" type="number" min="0" step="100" defaultValue={(tenant.rotisserieSettings?.deliveryFeeInCents ?? 250000) / 100} />
+            <input name="deliveryFeeInPesos" inputMode="decimal" defaultValue={(tenant.rotisserieSettings?.deliveryFeeInCents ?? 250000) / 100} />
           </label>
 
           <section className="admin-appointments">
@@ -206,10 +208,8 @@ export async function RotisserieAdminPanel({
                                 <input
                                   aria-label="Precio"
                                   defaultValue={product.priceInCents / 100}
-                                  min="0"
+                                  inputMode="decimal"
                                   name={`price:${product.id}`}
-                                  step="100"
-                                  type="number"
                                 />
                               </div>
                               <span className="rotisserie-admin-meta-sep">·</span>
@@ -217,10 +217,9 @@ export async function RotisserieAdminPanel({
                                 <input
                                   aria-label="Stock"
                                   defaultValue={product.stockQuantity ?? ""}
-                                  min="0"
+                                  inputMode="numeric"
                                   name={`stock:${product.id}`}
                                   placeholder="∞"
-                                  type="number"
                                 />
                                 <span>en stock</span>
                               </div>
@@ -298,11 +297,11 @@ export async function RotisserieAdminPanel({
                           <div className="rotisserie-admin-title-meta">
                             <div className="rotisserie-admin-price">
                               <span>$</span>
-                              <input aria-label="Precio" autoComplete="off" defaultValue="" min="0" name={`newProductPrice:${category.id}`} step="100" type="number" />
+                              <input aria-label="Precio" autoComplete="off" defaultValue="" inputMode="decimal" name={`newProductPrice:${category.id}`} />
                             </div>
                             <span className="rotisserie-admin-meta-sep">·</span>
                             <div className="rotisserie-admin-inline-field" title="Vacío = sin límite de stock">
-                              <input aria-label="Stock" autoComplete="off" defaultValue="" min="0" name={`newProductStock:${category.id}`} placeholder="∞" type="number" />
+                              <input aria-label="Stock" autoComplete="off" defaultValue="" inputMode="numeric" name={`newProductStock:${category.id}`} placeholder="∞" />
                               <span>en stock</span>
                             </div>
                           </div>

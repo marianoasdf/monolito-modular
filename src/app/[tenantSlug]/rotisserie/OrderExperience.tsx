@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CatalogView } from "../../../modules/rotisserie/application/services/GetCatalogService";
+import { MAX_UNITS_PER_PRODUCT } from "../../../modules/rotisserie/domain/value-objects/orderTypes";
 
 type FulfillmentType = "pickup" | "delivery";
 type PaymentMethod = "cash" | "transfer";
@@ -83,7 +84,9 @@ export function OrderExperience({ tenantSlug, catalog, orderBasePath, deliveryFe
       const next = { ...current };
       const product = productIndex.get(productId);
       const requestedQuantity = (next[productId] ?? 0) + delta;
-      const quantity = product?.stockQuantity !== undefined ? Math.min(requestedQuantity, product.stockQuantity) : requestedQuantity;
+      const stockCap = product?.stockQuantity;
+      const cap = stockCap !== undefined ? Math.min(stockCap, MAX_UNITS_PER_PRODUCT) : MAX_UNITS_PER_PRODUCT;
+      const quantity = Math.min(requestedQuantity, cap);
       if (quantity <= 0) {
         delete next[productId];
       } else {
@@ -183,7 +186,10 @@ export function OrderExperience({ tenantSlug, catalog, orderBasePath, deliveryFe
                             className="button-secondary rotisserie-quantity-button"
                             onClick={() => changeQuantity(product.id, 1)}
                             aria-label={`Agregar uno de ${product.name}`}
-                            disabled={product.stockQuantity !== undefined && quantity >= product.stockQuantity}
+                            disabled={
+                              (product.stockQuantity !== undefined && quantity >= product.stockQuantity) ||
+                              quantity >= MAX_UNITS_PER_PRODUCT
+                            }
                           >
                             +
                           </button>
@@ -240,10 +246,12 @@ export function OrderExperience({ tenantSlug, catalog, orderBasePath, deliveryFe
             <span className="muted">Teléfono (WhatsApp)</span>
             <input
               type="tel"
+              inputMode="tel"
               value={customerPhone}
               onChange={(event) => setCustomerPhone(event.target.value)}
-              placeholder="Ej: 3454 20 0683"
-              maxLength={40}
+              placeholder="Tu celular"
+              pattern="^[0-9+()\s-]{8,20}$"
+              title="Podés escribirlo como 3454200683, 3454 15 200683 o +5493454200683"
               required
             />
           </label>
@@ -288,7 +296,7 @@ export function OrderExperience({ tenantSlug, catalog, orderBasePath, deliveryFe
             <textarea
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
-              maxLength={400}
+              maxLength={300}
               rows={2}
             />
           </label>

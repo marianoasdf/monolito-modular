@@ -2,14 +2,9 @@ import {
   NotificationMessage,
   NotificationSender,
 } from "../application/contracts/NotificationSender";
+import { sanitizeTemplateTextParameter } from "./sanitizeTemplateTextParameter";
 
 const ARGENTINA_TIME_ZONE = "America/Argentina/Buenos_Aires";
-
-function sanitizeTemplateTextParameter(value: string): string {
-  return value
-    .replace(/\r\n|\r|\n|\t/g, " ")
-    .replace(/ {5,}/g, "    ");
-}
 
 function formatAppointmentDateTime(isoDate: string | undefined): string | null {
   if (!isoDate) {

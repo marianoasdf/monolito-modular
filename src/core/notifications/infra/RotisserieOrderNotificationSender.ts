@@ -2,6 +2,7 @@ import {
   NotificationMessage,
   NotificationSender,
 } from "../application/contracts/NotificationSender";
+import { sanitizeTemplateTextParameter } from "./sanitizeTemplateTextParameter";
 
 const ROTISSERIE_ORDER_TEMPLATE_NAME = "rotisserie_new_order";
 const ROTISSERIE_ORDER_RECEIVED_TEMPLATE_NAME = "rotisserie_order_received";
@@ -70,13 +71,13 @@ export class RotisserieOrderNotificationSender implements NotificationSender {
       return;
     }
 
-    const customerName = message.metadata?.customerName ?? "Cliente";
+    const customerName = sanitizeTemplateTextParameter(message.metadata?.customerName ?? "Cliente");
     const customerPhone = message.metadata?.customerPhoneNumber ?? "N/A";
     const fulfillmentType = message.metadata?.fulfillmentType ?? "N/A";
     const paymentMethod = message.metadata?.paymentMethod ?? "N/A";
     const itemsSummary = message.metadata?.itemsSummary ?? "N/A";
     const totalFormatted = message.metadata?.totalFormatted ?? "N/A";
-    const notes = message.metadata?.notes ?? "Sin nota";
+    const notes = sanitizeTemplateTextParameter(message.metadata?.notes ?? "Sin nota");
 
     // Notificación a los dueños
     for (const recipient of this.recipientPhones) {

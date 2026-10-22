@@ -428,6 +428,20 @@ select {
   font-size: 1.1rem;
 }
 
+.admin-password-details > summary {
+  cursor: pointer;
+  width: fit-content;
+  font-size: 0.95rem;
+}
+
+.admin-password-details:not([open]) > .admin-form {
+  display: none;
+}
+
+.admin-password-details[open] > .admin-form {
+  margin-top: 1rem;
+}
+
 .admin-appointments-list {
   display: grid;
   gap: 0.75rem;

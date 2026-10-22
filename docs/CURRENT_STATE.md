@@ -9,19 +9,18 @@ Fotografía del repo. Donde el código no alcanza para saber si algo está en pr
 - Mercado Pago de barbería: Brick, preferencia y webhook que pasan el turno a `paid`, `pending` o `failed`.
 - Carta de rotisería, alta de pedido (retiro/delivery, efectivo/transferencia), confirmación por id y descuento de stock numérico.
 - WhatsApp de rotisería a varios teléfonos del negocio y, si el template responde, al cliente.
-- Admin de barbería: nombre, descripción, maps, teléfono, horarios, slots express y borrado de turnos del día.
-- Admin de rotisería: costo de envío, categorías y productos (alta, orden, mover, ocultar, borrar), con topes de 30 categorías, 50 productos por categoría y 300 productos. El menú semanal del admin es solo de La Familia.
+- Admin de barbería: nombre, descripción, maps, teléfono, horarios, slots express, borrado de turnos del día y cambio de la clave del negocio.
+- Admin de rotisería: costo de envío, categorías y productos (alta, orden, mover, ocultar, borrar), con topes de 30 categorías, 50 productos por categoría y 300 productos, y cambio de la clave del negocio. El menú semanal del admin es solo de La Familia.
 - Carta de La Familia: destaca el menú configurado para el día actual y muestra la semana completa. La carta de Yoni no incluye ese bloque.
 - Seed create-only para tenants, settings de barbería y catálogo de La Familia y Yoni.
-- Dominios declarados: `mgbarber.xyz`, `rufianbarbershop.com`, `yoni24hs.com` (con `www`).
+- Dominios declarados: `mgbarber.xyz`, `rufianbarbershop.com`, `lafamiliaroti.com`, `yoni24hs.com` (con `www`).
 
 ## Incompleto
 
-- **Acceso:** no hay login de clientes ni de staff. El único acceso es la contraseña de admin por tenant.
+- **Acceso:** no hay login de clientes ni de staff. Cada tenant tiene clave de negocio y clave de soporte. La de soporte se carga con `scripts/set-support-password.ts`. Fuera de producción, `admin-local` sigue sirviendo cuando las dos están vacías.
 - **Pedidos:** el tipo admite `confirmed` y `cancelled`, pero el alta deja `pending` y no hay caso de uso ni pantalla para cambiarlo. El admin no lista pedidos.
 - **Turnos:** el enum tiene `COMPLETED` y `CANCELLED`. Nada en `src/` asigna `COMPLETED`. La acción de admin llamada cancel borra la fila (`deleteMany`), no marca `CANCELLED`.
 - **Servicios de barbería** (corte / barba / combo y precios), ciudad, barrio y la frase de horario están hardcodeados. La grilla semanal sí es configurable, pero el sitio solo muestra hoy.
-- **La Familia** (`lafamilia`) no tiene hosts en `publicTenantHosts.ts`. El propio contexto de negocio dice que el dominio corto sigue pendiente.
 - **WhatsApp entrante:** el webhook verifica el token y registra el mensaje. No responde ni crea turnos o pedidos.
 - **Kiosco y heladería** de Yoni están en el contexto de negocio, no en el modelo.
 - `npm run lint` corre con `.eslintrc.json` (`next/core-web-vitals`). No hay tests ni CI en el repo.
@@ -31,7 +30,7 @@ Fotografía del repo. Donde el código no alcanza para saber si algo está en pr
 
 - `.env.example` trae un `ENCRYPTION_KEY` que no decodifica a 32 bytes. Sin una clave válida, importar `crypto-utils` tira el proceso.
 - Los tenants demo del seed (`crown`, `heritage`, `northline`) no tienen settings de barbería. Sin teléfono, `/{slug}/barbershop` responde 404. La home igual los enlaza.
-- `next.config.js` duplica los hosts de Yoni. Un dominio nuevo en `publicTenantHosts.ts` no obtiene esos rewrites solo.
+- `next.config.js` duplica los hosts de La Familia y de Yoni. Un dominio nuevo en `publicTenantHosts.ts` no obtiene esos rewrites solo.
 - `POST /api/barbershop/appointments` y las rutas de pago confían el `tenantId` que manda el cliente. Rotisería no.
 - La cookie de admin no está firmada. Quien pueda setear `admin_session_{slug}=ok` pasa el chequeo de sesión. La contraseña solo se valida en el login.
 - El webhook de Mercado Pago no verifica firma: prueba el payment id con el token de cada tenant hasta que uno responde. El `POST /webhook` de WhatsApp tampoco valida firma de Meta.
@@ -58,6 +57,5 @@ No se puede afirmar desde el repo:
 No son un plan comprometido. Son el siguiente trabajo que el repo ya señala:
 
 1. Definir el ciclo del pedido (`pending` → `confirmed` / `cancelled`) si el admin tiene que operarlo.
-2. Registrar el dominio de La Familia en `publicTenantHosts.ts` y, si aplica, en `next.config.js`.
-3. No dar por cerrada la carta de Yoni ni el alta de WhatsApp sin confirmar la base y Meta.
-4. Alinear servicios y horarios visibles de barbería con lo que el admin puede editar, si el negocio lo pide. Hoy no es así.
+2. No dar por cerrada la carta de Yoni ni el alta de WhatsApp sin confirmar la base y Meta.
+3. Alinear servicios y horarios visibles de barbería con lo que el admin puede editar, si el negocio lo pide. Hoy no es así.

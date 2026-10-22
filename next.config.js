@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const publicRotisserieTenants = [
   {
+    slug: 'lafamilia',
+    hosts: ['lafamiliaroti.com', 'www.lafamiliaroti.com'],
+  },
+  {
     slug: 'yoni247',
     hosts: ['yoni24hs.com', 'www.yoni24hs.com'],
   },

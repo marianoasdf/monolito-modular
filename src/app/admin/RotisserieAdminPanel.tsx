@@ -8,6 +8,7 @@ import {
   WEEKLY_MENU_DAYS,
 } from "../../modules/rotisserie/infra/settings/rotisserieWeeklyMenu";
 import { AdminItemActions } from "./AdminItemActions";
+import { ChangeAdminPasswordForm } from "./ChangeAdminPasswordForm";
 import {
   createRotisserieCategoryAction,
   createRotisserieProductAction,
@@ -43,10 +44,12 @@ export async function RotisserieAdminPanel({
   const error = readQuery(query.error);
   const saved = readQuery(query.saved);
   const moved = readQuery(query.moved);
+  const passwordSaved = readQuery(query.password);
 
   const tenant = await prisma.tenant.findUnique({
     where: { slug: tenantSlug },
     include: {
+      auth: { select: { adminPasswordHash: true, supportPasswordHash: true } },
       rotisserieSettings: {
         select: rotisserieSettingsSelect(tenantSlug),
       },
@@ -82,6 +85,10 @@ export async function RotisserieAdminPanel({
     "product-limit": "No podés tener más de 300 productos en la carta.",
     "weekly-menu-too-long": "Cada día del menú semanal puede tener hasta 500 caracteres.",
     save: "No se pudieron guardar los cambios. Probá de nuevo.",
+    "password-wrong": "La clave actual no coincide.",
+    "password-short": "La clave nueva tiene que tener al menos 8 caracteres.",
+    "password-mismatch": "La clave nueva y la repetición no coinciden.",
+    "password-missing": "Este negocio todavía no tiene una clave propia. Se carga con el script de alta.",
   };
 
   if (!authenticated) {
@@ -92,7 +99,7 @@ export async function RotisserieAdminPanel({
           <h1 className="display-title admin-title">Entrar</h1>
           <p className="lead admin-lead">Controlá stock, precios y valor de envío.</p>
           {error === "invalid-password" ? <div className="booking-feedback booking-feedback--error"><strong>Clave incorrecta.</strong></div> : null}
-          {process.env.NODE_ENV !== "production" ? <div className="booking-feedback booking-feedback--success"><strong>Clave local: admin-local</strong></div> : null}
+          {process.env.NODE_ENV !== "production" && !tenant.auth?.adminPasswordHash && !tenant.auth?.supportPasswordHash ? <div className="booking-feedback booking-feedback--success"><strong>Clave local: admin-local</strong></div> : null}
           <form action={loginAdminAction} className="admin-login-form">
             <input name="basePath" type="hidden" value={basePath} />
             <input name="tenantSlug" type="hidden" value={tenantSlug} />
@@ -129,6 +136,7 @@ export async function RotisserieAdminPanel({
         {error === "auth" ? <div className="booking-feedback booking-feedback--error"><strong>Volvé a iniciar sesión.</strong></div> : null}
         {error && errorMessages[error] ? <div className="booking-feedback booking-feedback--error"><strong>{errorMessages[error]}</strong></div> : null}
         {saved === "1" ? <div className="booking-feedback booking-feedback--success"><strong>Cambios guardados.</strong></div> : null}
+        {passwordSaved === "1" ? <div className="booking-feedback booking-feedback--success"><strong>Clave actualizada.</strong></div> : null}
         {moved ? <div className="booking-feedback booking-feedback--success"><strong>{`Producto movido a ${moved}.`}</strong></div> : null}
 
         <form action={saveRotisserieAdminAction} className="admin-form">
@@ -393,6 +401,12 @@ export async function RotisserieAdminPanel({
 
           <button className="button booking-submit" type="submit">Guardar cambios</button>
         </form>
+
+        <ChangeAdminPasswordForm
+          basePath={basePath}
+          open={Boolean(error?.startsWith("password-"))}
+          tenantSlug={tenantSlug}
+        />
       </article>
     </section>
   );

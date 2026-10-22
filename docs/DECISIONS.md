@@ -24,7 +24,7 @@ WhatsApp y Mercado Pago no se leen de variables de entorno en el request. Están
 
 ## Admin por cookie de tenant, sin usuarios
 
-Una contraseña hasheada por tenant (`tenant_auth`) y una cookie cuyo nombre incluye el slug. No hay tabla de usuarios ni roles. La cookie no va firmada: el valor almacenado es el literal `ok`.
+Dos contraseñas hasheadas por tenant (`tenant_auth`): la del negocio y la de soporte. Una cookie cuyo nombre incluye el slug. No hay tabla de usuarios ni roles. La cookie no va firmada: el valor almacenado es el literal `ok`. La clave de soporte se rota con `scripts/set-support-password.ts` y no se entrega al negocio.
 
 ## Notificaciones desacopladas del caso de uso, atadas a WhatsApp en el container
 

@@ -81,7 +81,7 @@ Resolución:
 - Por slug de URL: `resolveTenantContextBySlug` lee `tenants` y devuelve `{ tenantId, tenantSlug }`.
 - `TenantContext` es solo esa pareja. No hay middleware de tenant ni usuario de request.
 
-Hosts declarados hoy: `mgbarber`, `rufianbarbershop`, `lafamilia` (lista de hosts vacía), `yoni247`. `next.config.js` repite solo los hosts de `yoni247` para rewrites (`/privacy`, `/terms`, `/order/:id`) y para redirigir `/{slug}/...` a `/` en ese dominio.
+Hosts declarados hoy: `mgbarber`, `rufianbarbershop`, `lafamilia` (`lafamiliaroti.com`), `yoni247`. `next.config.js` repite los hosts de La Familia y de Yoni para rewrites (`/privacy`, `/terms`, `/order/:id`) y para redirigir `/{slug}/...` a `/` en ese dominio.
 
 En un host público, `/` renderiza la vertical de ese tenant y el layout oculta la navegación de la plataforma (`Shell`).
 
@@ -97,7 +97,7 @@ El seed (`prisma/seed.js`) crea tenants de demo (`crown`, `heritage`, `northline
 
 No hay usuarios finales ni sesión de cliente.
 
-El admin es una cookie httpOnly por tenant, `admin_session_{slug}`, valor fijo `"ok"`, 12 horas. La contraseña se compara con `TenantAuth.adminPasswordHash`. Fuera de producción, si no hay tenant o no hay hash, acepta `admin-local`.
+El admin es una cookie httpOnly por tenant, `admin_session_{slug}`, valor fijo `"ok"`, 12 horas. El login acepta `TenantAuth.adminPasswordHash` (negocio) o `TenantAuth.supportPasswordHash` (soporte). Al entrar, el servidor registra el slug y cuál de las dos coincidió. El formulario del panel solo reemplaza la clave del negocio, y exige la clave actual de negocio. `scripts/set-support-password.ts` carga o reemplaza la de soporte y no pisa la del negocio; si además viene `ADMIN_PASSWORD` y el negocio todavía no tiene clave, la crea. Fuera de producción, `admin-local` entra solo cuando las dos claves están vacías.
 
 - Producción: `/admin` elige el panel según el host. Las rutas `/{slug}/.../admin` responden 404.
 - Local: `/admin` redirige a MG Barber. El admin por slug sigue disponible.

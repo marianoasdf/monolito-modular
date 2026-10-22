@@ -21,7 +21,8 @@ import {
   clearAdminAuthenticated,
   isAdminAuthenticated,
   setAdminAuthenticated,
-  validateAdminPassword,
+  changeBusinessAdminPassword,
+  matchAdminPassword,
 } from "./auth";
 
 function resolveBasePath(formData: FormData): string {
@@ -134,14 +135,38 @@ export async function loginAdminAction(formData: FormData): Promise<void> {
   const basePath = resolveBasePath(formData);
   const tenantSlug = resolveTenantSlug(formData);
   const password = `${formData.get("password") || ""}`;
-  const isValid = await validateAdminPassword(tenantSlug, password);
+  const access = await matchAdminPassword(tenantSlug, password);
 
-  if (!isValid) {
+  if (!access) {
     redirect(`${basePath}?error=invalid-password`);
   }
 
+  console.info(`admin login slug=${tenantSlug} access=${access}`);
   await setAdminAuthenticated(tenantSlug);
   redirect(basePath);
+}
+
+export async function changeAdminPasswordAction(formData: FormData): Promise<void> {
+  const basePath = resolveBasePath(formData);
+  const tenantSlug = resolveTenantSlug(formData);
+  const authenticated = await isAdminAuthenticated(tenantSlug);
+
+  if (!authenticated) {
+    redirect(`${basePath}?error=auth`);
+  }
+
+  const result = await changeBusinessAdminPassword(
+    tenantSlug,
+    `${formData.get("currentPassword") || ""}`,
+    `${formData.get("nextPassword") || ""}`,
+    `${formData.get("confirmPassword") || ""}`,
+  );
+
+  if (result !== "ok") {
+    redirect(`${basePath}?error=password-${result}`);
+  }
+
+  redirect(`${basePath}?password=1`);
 }
 
 export async function logoutAdminAction(formData: FormData): Promise<void> {

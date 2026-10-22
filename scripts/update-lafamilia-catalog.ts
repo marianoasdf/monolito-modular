@@ -115,7 +115,10 @@ async function updateLaFamiliaCatalog(): Promise<void> {
     throw new Error("No existe el tenant 'lafamilia'. Ejecutá primero npm run prisma:seed.");
   }
 
-  await prisma.$transaction((tx) => updateCatalog(tx, tenant.id, rotisserieCatalog));
+  await prisma.$transaction((tx) => updateCatalog(tx, tenant.id, rotisserieCatalog), {
+    maxWait: 15_000,
+    timeout: 120_000,
+  });
 
   const productCount = rotisserieCatalog.reduce(
     (total, category) => total + category.products.length,

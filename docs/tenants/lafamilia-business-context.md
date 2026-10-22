@@ -102,7 +102,7 @@ Web con **pedidos automáticos** que reemplace la dependencia del grupo de Whats
 
 ## Decisiones del proyecto
 
-- **Dominio público:** usar un **nombre corto** (evitar algo largo tipo "lafamilia…"). Pendiente de elegir y registrar en `src/app/publicTenantHosts.ts`. (El `slug` interno del tenant sigue siendo `lafamilia`.)
+- **Dominio público:** `lafamiliaroti.com` (y `www`), declarado en `src/app/publicTenantHosts.ts`. El `slug` interno del tenant sigue siendo `lafamilia`.
 - Mantener la lógica actual pero mejorada con: link a WhatsApp, link al grupo y **pedidos automáticos**.
 
 ## Notas para próximas fases

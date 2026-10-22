@@ -9,6 +9,7 @@ import {
   WEEKDAY_FIELDS,
 } from "../../modules/barbershop/infra/settings/barbershopTenantSettings";
 import { cancelAppointmentAction, loginAdminAction, logoutAdminAction, saveAdminSettingsAction } from "./actions";
+import { ChangeAdminPasswordForm } from "./ChangeAdminPasswordForm";
 import { isAdminAuthenticated } from "./auth";
 
 type AdminQuery = Record<string, string | string[] | undefined>;
@@ -30,6 +31,22 @@ function getMessage(error: string | undefined): string | null {
     return "Volve a iniciar sesion.";
   }
 
+  if (error === "password-wrong") {
+    return "La clave actual no coincide.";
+  }
+
+  if (error === "password-short") {
+    return "La clave nueva tiene que tener al menos 8 caracteres.";
+  }
+
+  if (error === "password-mismatch") {
+    return "La clave nueva y la repetición no coinciden.";
+  }
+
+  if (error === "password-missing") {
+    return "Este negocio todavía no tiene una clave propia. Se carga con el script de alta.";
+  }
+
   return null;
 }
 
@@ -45,11 +62,15 @@ export async function AdminPanel({
   const error = Array.isArray(query.error) ? query.error[0] : query.error;
   const saved = Array.isArray(query.saved) ? query.saved[0] : query.saved;
   const authenticated = await isAdminAuthenticated(tenantSlug);
+  const passwordSaved = Array.isArray(query.password) ? query.password[0] : query.password;
   const message = getMessage(error);
 
   const tenant = await prisma.tenant.findUnique({
     where: { slug: tenantSlug },
-    include: { settings: true },
+    include: {
+      settings: true,
+      auth: { select: { adminPasswordHash: true, supportPasswordHash: true } },
+    },
   });
 
   if (!tenant) {
@@ -67,7 +88,9 @@ export async function AdminPanel({
           <p className="lead admin-lead">Usa esta pantalla para cambiar nombre, horarios, WhatsApp y anticipacion.</p>
 
           {message ? <div className="booking-feedback booking-feedback--error"><strong>{message}</strong></div> : null}
-          {process.env.NODE_ENV !== "production" ? (
+          {process.env.NODE_ENV !== "production" &&
+          !tenant.auth?.adminPasswordHash &&
+          !tenant.auth?.supportPasswordHash ? (
             <div className="booking-feedback booking-feedback--success">
               <strong>Clave local: admin-local</strong>
             </div>
@@ -163,6 +186,11 @@ export async function AdminPanel({
         {saved === "1" ? (
           <div className="booking-feedback booking-feedback--success">
             <strong>Cambios guardados.</strong>
+          </div>
+        ) : null}
+        {passwordSaved === "1" ? (
+          <div className="booking-feedback booking-feedback--success">
+            <strong>Clave actualizada.</strong>
           </div>
         ) : null}
 
@@ -261,6 +289,12 @@ export async function AdminPanel({
             </div>
           )}
         </section>
+
+        <ChangeAdminPasswordForm
+          basePath={basePath}
+          open={Boolean(error?.startsWith("password-"))}
+          tenantSlug={tenantSlug}
+        />
       </article>
     </section>
   );

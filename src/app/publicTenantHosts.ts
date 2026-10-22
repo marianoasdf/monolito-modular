@@ -23,7 +23,7 @@ export const PUBLIC_TENANT_HOSTS: PublicTenantHost[] = [
   {
     slug: "lafamilia",
     name: "La Familia Rotisería y Viandas",
-    hosts: [],
+    hosts: ["lafamiliaroti.com", "www.lafamiliaroti.com"],
     vertical: "rotisserie",
   },
   {

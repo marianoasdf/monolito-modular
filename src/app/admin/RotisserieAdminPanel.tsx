@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "../../core/shared/infra/prisma/prismaClient";
+import {
+  resolveWeeklyMenu,
+  rotisserieSettingsSelect,
+  tenantUsesWeeklyMenu,
+  WEEKLY_MENU_DAYS,
+} from "../../modules/rotisserie/infra/settings/rotisserieWeeklyMenu";
 import { AdminItemActions } from "./AdminItemActions";
 import {
   createRotisserieCategoryAction,
@@ -41,7 +47,9 @@ export async function RotisserieAdminPanel({
   const tenant = await prisma.tenant.findUnique({
     where: { slug: tenantSlug },
     include: {
-      rotisserieSettings: true,
+      rotisserieSettings: {
+        select: rotisserieSettingsSelect(tenantSlug),
+      },
       rotisserieCategories: {
         include: {
           products: {
@@ -61,6 +69,10 @@ export async function RotisserieAdminPanel({
   }
 
   const productCategories = tenant.rotisserieCategories;
+  const usesWeeklyMenu = tenantUsesWeeklyMenu(tenantSlug);
+  const weeklyMenu = usesWeeklyMenu
+    ? resolveWeeklyMenu(tenant.rotisserieSettings?.weeklyMenu)
+    : null;
   const errorMessages: Record<string, string> = {
     "category-limit": "No podés crear más de 30 categorías en la carta.",
     "category-not-empty": "No se puede eliminar una categoría con productos. Primero mové o eliminá sus productos.",
@@ -68,6 +80,7 @@ export async function RotisserieAdminPanel({
     "duplicate-catalog-name": "Ya existe un producto o una categoría con ese nombre.",
     "invalid-amount": "Revisá precios, stock y valor de envío. Usá números como 2500 o 7.500.",
     "product-limit": "No podés tener más de 300 productos en la carta.",
+    "weekly-menu-too-long": "Cada día del menú semanal puede tener hasta 500 caracteres.",
     save: "No se pudieron guardar los cambios. Probá de nuevo.",
   };
 
@@ -126,6 +139,27 @@ export async function RotisserieAdminPanel({
             <span>Valor de envío</span>
             <input name="deliveryFeeInPesos" inputMode="decimal" defaultValue={(tenant.rotisserieSettings?.deliveryFeeInCents ?? 250000) / 100} />
           </label>
+
+          {weeklyMenu ? (
+            <section className="admin-appointments">
+              <h2 className="admin-section-title">Menú semanal</h2>
+              <p className="muted">Escribí el plato de cada día. Los días vacíos se mostrarán como “Consultar”.</p>
+              <div className="admin-grid">
+                {WEEKLY_MENU_DAYS.map(({ key, label, fieldName }) => (
+                  <label className="booking-field admin-day-field" key={key}>
+                    <span>{label}</span>
+                    <textarea
+                      defaultValue={weeklyMenu[key]}
+                      maxLength={500}
+                      name={fieldName}
+                      placeholder="Ej.: Pollo al horno con papas y ensalada"
+                      rows={3}
+                    />
+                  </label>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           <section className="admin-appointments">
             <h2 className="admin-section-title">Categorías y productos</h2>

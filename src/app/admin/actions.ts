@@ -11,6 +11,13 @@ import {
   WEEKDAY_FIELDS,
 } from "../../modules/barbershop/infra/settings/barbershopTenantSettings";
 import {
+  createEmptyWeeklyMenu,
+  resolveWeeklyMenu,
+  rotisserieSettingsSelect,
+  tenantUsesWeeklyMenu,
+  WEEKLY_MENU_DAYS,
+} from "../../modules/rotisserie/infra/settings/rotisserieWeeklyMenu";
+import {
   clearAdminAuthenticated,
   isAdminAuthenticated,
   setAdminAuthenticated,
@@ -218,6 +225,18 @@ export async function saveRotisserieAdminAction(formData: FormData): Promise<voi
     redirectCatalogError(basePath, "invalid-amount");
   }
 
+  const usesWeeklyMenu = tenantUsesWeeklyMenu(tenantSlug);
+  const weeklyMenu = usesWeeklyMenu ? createEmptyWeeklyMenu() : null;
+  if (weeklyMenu) {
+    for (const { key, fieldName } of WEEKLY_MENU_DAYS) {
+      const entry = `${formData.get(fieldName) || ""}`.trim();
+      if (entry.length > 500) {
+        redirectCatalogError(basePath, "weekly-menu-too-long");
+      }
+      weeklyMenu[key] = entry;
+    }
+  }
+
   const categoryIds = [...formData.keys()]
     .filter((key) => key.startsWith("categoryId:"))
     .map((key) => `${formData.get(key) || ""}`)
@@ -303,7 +322,7 @@ export async function saveRotisserieAdminAction(formData: FormData): Promise<voi
   const [settings, existingCategories, existingProducts] = await Promise.all([
     prisma.rotisserieTenantSettings.findUnique({
       where: { tenantId },
-      select: { deliveryFeeInCents: true },
+      select: rotisserieSettingsSelect(tenantSlug),
     }),
     prisma.rotisserieCategory.findMany({
       where: { tenantId },
@@ -391,13 +410,22 @@ export async function saveRotisserieAdminAction(formData: FormData): Promise<voi
   }
 
   const deliveryFeeChanged = settings?.deliveryFeeInCents !== deliveryFeeInCents;
+  const weeklyMenuChanged =
+    weeklyMenu !== null &&
+    JSON.stringify(resolveWeeklyMenu(settings?.weeklyMenu)) !== JSON.stringify(weeklyMenu);
 
   try {
-    if (deliveryFeeChanged) {
+    if (deliveryFeeChanged || weeklyMenuChanged) {
       await prisma.rotisserieTenantSettings.upsert({
         where: { tenantId },
-        update: { deliveryFeeInCents },
-        create: { tenantId, deliveryFeeInCents },
+        update:
+          weeklyMenu !== null
+            ? { deliveryFeeInCents, weeklyMenu }
+            : { deliveryFeeInCents },
+        create:
+          weeklyMenu !== null
+            ? { tenantId, deliveryFeeInCents, weeklyMenu }
+            : { tenantId, deliveryFeeInCents },
       });
     }
 
@@ -461,7 +489,7 @@ export async function saveRotisserieAdminAction(formData: FormData): Promise<voi
     redirectCatalogError(basePath, "save");
   }
 
-  if (deliveryFeeChanged || changedCategories.length > 0 || writableProducts.length > 0) {
+  if (deliveryFeeChanged || weeklyMenuChanged || changedCategories.length > 0 || writableProducts.length > 0) {
     revalidatePath("/");
     revalidatePath(`/${tenantSlug}/rotisserie/carta`);
     revalidatePath(basePath);

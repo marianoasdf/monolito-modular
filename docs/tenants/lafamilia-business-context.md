@@ -1,7 +1,7 @@
 # La Familia Rotisería y Viandas — Contexto de negocio
 
-> Información relevada con la dueña (jun 2026). Fuente de verdad del dominio para el tenant `lafamilia`.
-> Capturado para las próximas fases. **Los datos del seed actual (`prisma/seed.js`) son placeholders**; la carta real está acá abajo.
+> Información relevada con la dueña (jun 2026) y carta actualizada por WhatsApp (oct 2026).
+> Fuente de verdad del dominio para el tenant `lafamilia`. El catálogo de `prisma/seed.js` coincide con esta carta.
 
 ## El negocio
 
@@ -28,45 +28,41 @@
 
 - *"¿Qué sale más, la roti o las viandas?"* → **"Ambas. Depende la hora. Al mediodía viandas y a la noche roti."**
 
-## Menú del día — patrón semanal (Instagram, $5.000 c/u + entrada)
+## Menú del día y menú semanal
 
-El menú del día **cambia a diario**, pero hay un **patrón semanal** de base:
-
-| Día | Plato |
-|---|---|
-| Lunes | Arroz amarillo con pollo + entrada |
-| Martes | Guiso de lentejas con chorizo + entrada |
-| Miércoles | Tallarines con bolognesa o estofado + entrada |
-| Jueves | Pastel de papa + entrada |
-| Viernes | Burger con papas fritas + entrada |
-| Sábado | Canelones de verdura (salsa roja / mixta / blanca) + pan |
-| Domingo | Pollo al horno con papas fritas + ensalada |
-
-**Variación diaria real (ejemplo, sábado):** *"Hoy tenemos: Lasaña con salsa! Cambiamos los canelones por hoy… Milanesa con papas fritas o ensalada."*
-
-> **Evidencia de dominio relevante** para la decisión `DailyMenu` (hoy modelado como proyección sobre `Product`): existe **plantilla semanal + override diario**. Si esto se formaliza, refuerza que "Oferta de Hoy" podría emerger como concepto propio en una iteración futura. Por ahora se mantiene como proyección, según lo decidido.
+El menú del día cuesta **$6.000** y es comida al plato casera hecha en el día. La dueña y sus empleados pueden configurar desde el panel una descripción para cada día de lunes a domingo. La carta pública destaca el día actual y también muestra la semana completa. Un día vacío aparece como **“Consultar”**.
 
 ## Carta completa (cartel del local)
 
 Precios en pesos argentinos.
 
-**Pizzas:** Muzzarella $9.000 · Napolitana $12.000 · Fugazza $11.000 · Provenzal $11.000 · Jamón y huevo $12.500 · A caballo $15.000 · Alemana $15.000
+**Pizzas:** Muzzarella $10.000 · Napolitana $13.000 · Fugazza $12.000 · Provenzal $12.000 · Jamón y huevo $15.000 · Alemana $17.000 · A caballo $18.000
 
-**Tartas** (jamón y queso / verdura / choclo / cebolla y queso — consultar stock): Jamón y queso $10.000 · Verdura $9.000 · 1/2 tartas $6.000 · Mini tartas $3.000
+**Tartas** (jamón y queso / verdura / choclo / cebolla y queso — consultar stock): Jamón y queso $13.000 · Verdura $11.000 · 1/2 tarta $7.000 · Mini tarta $4.000
 
-**Empanadas** (mismos sabores, consultar stock): $2.500 c/u · 6: $15.000 · 12: $28.000
+**Empanadas:** Jamón y queso o verdura $1.500 c/u · Carne $2.000 c/u · 6: $9.000 · 12: $18.000
 
-**Hamburguesas** (salen con papas): Completa $10.500 · Doble carne $12.500 · Doble cheddar $14.500
+**Sánguches de milanesa** (rinden dos personas): Gigante de carne $15.000 · Gigante de pollo $12.000 · El Llorón de carne $15.000 · El Llorón de pollo $12.000
 
-**Hamburpizza** (sale con papas, rinde dos personas): $28.000 · 1/2 hamburpizza $18.000
+**Hamburguesas** (salen con papas): Completa $12.000 · Doble carne $13.000 · Doble cheddar $15.000 · Vegetariana $10.000
 
-**Comida al plato:** Tortilla de papa simple $7.000 · Tortilla de papa rellena $9.000
+**Hamburpizza:** 1/2 $15.000 · Entera $25.000
 
-**Pastas** (salsas: fileto, blanca, bolognesa): Tallarines caseros al huevo $7.000 · Ravioles de verdura $7.000 · Ñoquis $7.000 · Sorrentinos $7.000
+**Pizzanesa:** 1/2 $15.000 · Entera $25.000
 
-**Papas:** Papas fritas $5.000 · Papas con cheddar y verdeo $7.000
+**Adicional:** Papas fritas $3.000, solo para sánguches de milanesa, hamburpizza o pizzanesa.
 
-**Menú del día:** $5.000
+**Papas fritas:** Bandeja mediana $5.000
+
+**Comida al plato:** Tortilla simple $8.000 · Tortilla rellena $10.000
+
+**Pastas** (salsas: fileto, blanca o boloñesa): Tallarines caseros $6.000 · Ravioles $6.000 · Ñoquis $6.000 · Canelones $7.000 · Lasaña $7.000
+
+**Sánguches de miga y tostados:** Tostados $5.000 · Miga simples $7.000 · Miga triples $9.000
+
+**Postres:** Budín de pan o flan, porción grande $3.000 · Postre en pote $4.500 · 2 postres en pote $8.000
+
+**Menú del día:** $6.000
 
 ## Objetivo del sistema (visión)
 
@@ -111,7 +107,6 @@ Web con **pedidos automáticos** que reemplace la dependencia del grupo de Whats
 
 ## Notas para próximas fases
 
-- Reemplazar el catálogo placeholder del seed por estas categorías/productos reales (precios en `priceInCents`).
-- Categorías reales sugeridas: Menú del día, Pizzas, Tartas, Empanadas, Hamburguesas, Hamburpizza, Comida al plato, Pastas, Papas.
+- Mantener sincronizada esta fuente con cambios de carta confirmados por la dueña.
 - WhatsApp Cloud: confirmación automática de pedidos + responder "qué hay hoy" / "la carta" (fase posterior).
 - Capturas de referencia (cartel, IG, grupo de WhatsApp) guardadas en la carpeta `assets/` del proyecto.

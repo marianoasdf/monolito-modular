@@ -3,6 +3,12 @@ import { notFound } from "next/navigation";
 import { resolveTenantContextBySlug } from "../../../../core/tenancy/infra/resolveTenantContextBySlug";
 import { prisma } from "../../../../core/shared/infra/prisma/prismaClient";
 import { buildGetCatalogService } from "../../../../modules/rotisserie/infra/container/buildGetCatalogService";
+import {
+  getArgentinaWeekdayKey,
+  resolveWeeklyMenu,
+  rotisserieSettingsSelect,
+  tenantUsesWeeklyMenu,
+} from "../../../../modules/rotisserie/infra/settings/rotisserieWeeklyMenu";
 import { OrderExperience } from "../OrderExperience";
 
 export default async function RotisserieCatalogPage({
@@ -19,9 +25,10 @@ export default async function RotisserieCatalogPage({
 
   const service = buildGetCatalogService();
   const catalog = await service.execute({ tenantId: tenant.tenantId });
+  const usesWeeklyMenu = tenantUsesWeeklyMenu(tenant.tenantSlug);
   const settings = await prisma.rotisserieTenantSettings.findUnique({
     where: { tenantId: tenant.tenantId },
-    select: { deliveryFeeInCents: true },
+    select: rotisserieSettingsSelect(tenant.tenantSlug),
   });
 
   return (
@@ -36,7 +43,17 @@ export default async function RotisserieCatalogPage({
           <p className="muted">Todavía no hay productos cargados.</p>
         </article>
       ) : (
-        <OrderExperience tenantSlug={tenant.tenantSlug} catalog={catalog} deliveryFeeInCents={settings?.deliveryFeeInCents ?? 250000} />
+        <OrderExperience
+          tenantSlug={tenant.tenantSlug}
+          catalog={catalog}
+          deliveryFeeInCents={settings?.deliveryFeeInCents ?? 250000}
+          {...(usesWeeklyMenu
+            ? {
+                currentWeekday: getArgentinaWeekdayKey(),
+                weeklyMenu: resolveWeeklyMenu(settings?.weeklyMenu),
+              }
+            : {})}
+        />
       )}
 
       <footer className="tenant-footer">

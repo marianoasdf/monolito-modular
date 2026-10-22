@@ -1,3 +1,32 @@
+/* Con preflight desactivado, `base` solo emite las variables --tw-* que usan ring y shadow. */
+@tailwind base;
+
+/*
+ * Reset acotado al panel de plataforma. Tailwind corre sin preflight para no
+ * tocar los sitios de tenant ni los admins, así que las utilidades de borde
+ * y los márgenes por defecto se normalizan solo dentro de `.pm-root`.
+ * Va antes de `utilities` para que las clases de Tailwind tengan prioridad.
+ */
+.pm-root *,
+.pm-root *::before,
+.pm-root *::after {
+  border-width: 0;
+  border-style: solid;
+  border-color: #e4e4e7;
+}
+
+.pm-root :where(h1, h2, h3, p, dl, dd, ul) {
+  margin: 0;
+}
+
+.pm-root :where(ul) {
+  padding: 0;
+  list-style: none;
+}
+
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --background: #f2f3ee;
   --surface: rgba(255, 255, 252, 0.92);
@@ -1064,6 +1093,39 @@ select {
 .price {
   color: var(--accent-strong);
   font-weight: 700;
+}
+
+.rotisserie-weekly-menu {
+  padding: 1.6rem;
+}
+
+.rotisserie-weekly-menu__today {
+  margin: 0.25rem 0 0;
+  font-size: 1.5rem;
+}
+
+.rotisserie-weekly-menu__today-description {
+  margin: 0.4rem 0 1.5rem;
+  font-size: 1.05rem;
+  font-weight: 650;
+}
+
+.rotisserie-weekly-menu__heading {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.rotisserie-weekly-menu__days li {
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.rotisserie-weekly-menu__days strong {
+  min-width: 5.5rem;
+}
+
+.rotisserie-weekly-menu__day--today {
+  border-color: var(--accent);
 }
 
 .rotisserie-category-panel {

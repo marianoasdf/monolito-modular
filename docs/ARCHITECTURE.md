@@ -8,6 +8,8 @@ Un proceso Next.js, un `PrismaClient` y una base PostgreSQL. Los módulos no tie
 src/app/                  shell: páginas, layouts, route handlers, server actions
   publicTenantHosts.ts    dominio público → slug y vertical
   page.tsx                home de plataforma, o el sitio del tenant si el host matchea
+  platform/               panel de plataforma: directorio de tenants y componentes (Tailwind)
+  platform/               panel de plataforma: directorio de tenants y componentes (Tailwind)
   admin/                  login y paneles (barbería y rotisería)
   api/barbershop/         alta de turno y Mercado Pago
   api/rotisserie/orders/  alta de pedido
@@ -119,7 +121,7 @@ Scripts de carga (no son parte del runtime): `scripts/migrate-to-tenant-integrat
 
 **Barbería.** Un barbero implícito por tenant: el formulario envía `barberId = "{slug}-main-barber"`. No hay entidad barbero. Servicios (corte, barba, combo), precios y el texto de horario comercial están fijos en `PrismaBarbershopSiteProfileRepository`. Lo configurable en DB es nombre público, descripción, teléfono, maps, grilla semanal y slots express. La agenda pública es solo el día en curso, zona `America/Argentina/Buenos_Aires`, con 60 minutos de anticipación (30 en slots express). Sin teléfono en settings, el sitio responde 404.
 
-**Rotisería.** Categorías y productos por tenant, nombres normalizados únicos, visibilidad, orden y stock. `stockQuantity` null significa sin tope. El catálogo público oculta no disponibles y stock 0. Pedido: retiro o delivery, efectivo o transferencia. El envío sale de `RotisserieTenantSettings`; si no hay fila, el servicio usa 2.500 ARS (250.000 centavos). El estado al crear es `pending`.
+**Rotisería.** Categorías y productos por tenant, nombres normalizados únicos, visibilidad, orden y stock. `stockQuantity` null significa sin tope. El catálogo público oculta no disponibles y stock 0. `RotisserieTenantSettings` guarda el costo de envío y, para los tenants de `tenantUsesWeeklyMenu` (hoy solo `lafamilia`), un menú semanal JSON de lunes a domingo. Esa carta destaca el día actual en `America/Argentina/Buenos_Aires`. Yoni no muestra ni guarda ese menú. Pedido: retiro o delivery, efectivo o transferencia. Si no hay settings, el servicio usa 2.500 ARS (250.000 centavos) de envío. El estado al crear es `pending`.
 
 ## Excepciones a las capas
 

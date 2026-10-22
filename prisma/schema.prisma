@@ -14,16 +14,16 @@ enum BarbershopAppointmentStatus {
 }
 
 model Tenant {
-  id           String                   @id @default(cuid())
-  slug         String                   @unique
-  name         String
-  createdAt    DateTime                 @default(now())
-  updatedAt    DateTime                 @updatedAt
-  customers    BarbershopCustomer[]
-  appointments BarbershopAppointment[]
-  settings     BarbershopTenantSettings?
-  auth         TenantAuth?
-  integrations TenantIntegration[]
+  id                   String                    @id @default(cuid())
+  slug                 String                    @unique
+  name                 String
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+  customers            BarbershopCustomer[]
+  appointments         BarbershopAppointment[]
+  settings             BarbershopTenantSettings?
+  auth                 TenantAuth?
+  integrations         TenantIntegration[]
   rotisserieCategories RotisserieCategory[]
   rotisserieProducts   RotisserieProduct[]
   rotisserieOrders     RotisserieOrder[]
@@ -50,13 +50,13 @@ model BarbershopTenantSettings {
 }
 
 model BarbershopCustomer {
-  id           String                 @id @default(cuid())
+  id           String                  @id @default(cuid())
   tenantId     String
   fullName     String
   phoneNumber  String
-  createdAt    DateTime               @default(now())
-  updatedAt    DateTime               @updatedAt
-  tenant       Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+  tenant       Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   appointments BarbershopAppointment[]
 
   @@unique([tenantId, id])
@@ -66,26 +66,26 @@ model BarbershopCustomer {
 }
 
 model BarbershopAppointment {
-  id                         String                      @id @default(cuid())
-  tenantId                   String
-  customerId                 String
-  barberId                   String
-  serviceCode                String
-  startsAt                   DateTime
-  durationInMinutes          Int
-  status                     BarbershopAppointmentStatus @default(SCHEDULED)
-  notes                      String?
-  paymentMethod              String                      @default("cash")
-  paymentStatus              String                      @default("not_required")
-  createdAt                  DateTime                    @default(now())
-  updatedAt                  DateTime                    @updatedAt
+  id                String                      @id @default(cuid())
+  tenantId          String
+  customerId        String
+  barberId          String
+  serviceCode       String
+  startsAt          DateTime
+  durationInMinutes Int
+  status            BarbershopAppointmentStatus @default(SCHEDULED)
+  notes             String?
+  paymentMethod     String                      @default("cash")
+  paymentStatus     String                      @default("not_required")
+  createdAt         DateTime                    @default(now())
+  updatedAt         DateTime                    @updatedAt
   tenant            Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   customer          BarbershopCustomer          @relation(fields: [tenantId, customerId], references: [tenantId, id], onDelete: Restrict)
 
+  @@unique([tenantId, barberId, startsAt])
   @@index([tenantId])
   @@index([tenantId, customerId])
   @@index([tenantId, startsAt])
-  @@unique([tenantId, barberId, startsAt])
   @@map("barbershop_appointments")
 }
 
@@ -116,26 +116,27 @@ model TenantIntegration {
 }
 
 model RotisserieTenantSettings {
-  id                    String   @id @default(cuid())
-  tenantId              String   @unique
-  deliveryFeeInCents    Int      @default(250000)
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  tenant                Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id                 String   @id @default(cuid())
+  tenantId           String   @unique
+  deliveryFeeInCents Int      @default(250000)
+  weeklyMenu         Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  tenant             Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
   @@map("rotisserie_tenant_settings")
 }
 
 model RotisserieCategory {
-  id             String   @id @default(cuid())
+  id             String              @id @default(cuid())
   tenantId       String
   name           String
   normalizedName String
-  sortOrder      Int      @default(0)
-  isAvailable    Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  sortOrder      Int                 @default(0)
+  isAvailable    Boolean             @default(true)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
   tenant         Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   products       RotisserieProduct[]
 
@@ -146,7 +147,7 @@ model RotisserieCategory {
 }
 
 model RotisserieProduct {
-  id             String   @id @default(cuid())
+  id             String             @id @default(cuid())
   tenantId       String
   categoryId     String
   name           String
@@ -154,10 +155,10 @@ model RotisserieProduct {
   description    String?
   priceInCents   Int
   stockQuantity  Int?
-  isAvailable    Boolean  @default(true)
-  sortOrder      Int      @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  isAvailable    Boolean            @default(true)
+  sortOrder      Int                @default(0)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
   tenant         Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   category       RotisserieCategory @relation(fields: [tenantId, categoryId], references: [tenantId, id], onDelete: Cascade)
 
@@ -169,21 +170,21 @@ model RotisserieProduct {
 }
 
 model RotisserieOrder {
-  id              String   @id @default(cuid())
-  tenantId        String
-  customerName    String
-  customerPhone   String
-  fulfillmentType String
-  deliveryAddress String?
-  paymentMethod   String
-  status          String   @default("pending")
-  deliveryFeeInCents Int @default(0)
-  totalInCents    Int
-  notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  tenant          Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  items           RotisserieOrderItem[]
+  id                 String                @id @default(cuid())
+  tenantId           String
+  customerName       String
+  customerPhone      String
+  fulfillmentType    String
+  deliveryAddress    String?
+  paymentMethod      String
+  status             String                @default("pending")
+  deliveryFeeInCents Int                   @default(0)
+  totalInCents       Int
+  notes              String?
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  tenant             Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  items              RotisserieOrderItem[]
 
   @@index([tenantId])
   @@index([tenantId, createdAt])
@@ -191,7 +192,7 @@ model RotisserieOrder {
 }
 
 model RotisserieOrderItem {
-  id               String   @id @default(cuid())
+  id               String          @id @default(cuid())
   orderId          String
   tenantId         String
   productId        String
@@ -199,7 +200,7 @@ model RotisserieOrderItem {
   unitPriceInCents Int
   quantity         Int
   lineTotalInCents Int
-  createdAt        DateTime @default(now())
+  createdAt        DateTime        @default(now())
   order            RotisserieOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, orderId])

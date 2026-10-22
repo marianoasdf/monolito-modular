@@ -10,7 +10,8 @@ Fotografía del repo. Donde el código no alcanza para saber si algo está en pr
 - Carta de rotisería, alta de pedido (retiro/delivery, efectivo/transferencia), confirmación por id y descuento de stock numérico.
 - WhatsApp de rotisería a varios teléfonos del negocio y, si el template responde, al cliente.
 - Admin de barbería: nombre, descripción, maps, teléfono, horarios, slots express y borrado de turnos del día.
-- Admin de rotisería: costo de envío, categorías y productos (alta, orden, mover, ocultar, borrar), con topes de 30 categorías, 50 productos por categoría y 300 productos.
+- Admin de rotisería: costo de envío, categorías y productos (alta, orden, mover, ocultar, borrar), con topes de 30 categorías, 50 productos por categoría y 300 productos. El menú semanal del admin es solo de La Familia.
+- Carta de La Familia: destaca el menú configurado para el día actual y muestra la semana completa. La carta de Yoni no incluye ese bloque.
 - Seed create-only para tenants, settings de barbería y catálogo de La Familia y Yoni.
 - Dominios declarados: `mgbarber.xyz`, `rufianbarbershop.com`, `yoni24hs.com` (con `www`).
 
@@ -21,10 +22,10 @@ Fotografía del repo. Donde el código no alcanza para saber si algo está en pr
 - **Turnos:** el enum tiene `COMPLETED` y `CANCELLED`. Nada en `src/` asigna `COMPLETED`. La acción de admin llamada cancel borra la fila (`deleteMany`), no marca `CANCELLED`.
 - **Servicios de barbería** (corte / barba / combo y precios), ciudad, barrio y la frase de horario están hardcodeados. La grilla semanal sí es configurable, pero el sitio solo muestra hoy.
 - **La Familia** (`lafamilia`) no tiene hosts en `publicTenantHosts.ts`. El propio contexto de negocio dice que el dominio corto sigue pendiente.
-- **Menú del día** de La Familia es un producto fijo, no una plantilla semanal. `docs/tenants/lafamilia-business-context.md` lo deja para más adelante.
 - **WhatsApp entrante:** el webhook verifica el token y registra el mensaje. No responde ni crea turnos o pedidos.
 - **Kiosco y heladería** de Yoni están en el contexto de negocio, no en el modelo.
-- `npm run lint` existe; no hay config de ESLint ni tests ni CI en el repo.
+- `npm run lint` corre con `.eslintrc.json` (`next/core-web-vitals`). No hay tests ni CI en el repo.
+- Tailwind 3.4 está instalado con preflight desactivado y solo lo usa el panel de plataforma (`src/app/platform`, `Shell`). Sitios de tenant y admins siguen con el CSS clásico de `globals.css`.
 
 ## Problemas conocidos en el código
 

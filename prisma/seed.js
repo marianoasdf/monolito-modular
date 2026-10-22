@@ -101,7 +101,7 @@ const rotisserieTenant = {
   name: "La Familia Rotisería y Viandas",
 };
 
-// Carta real relevada del cartel del local (precios en centavos de ARS).
+// Carta actualizada enviada por la dueña en octubre de 2026 (precios en centavos de ARS).
 // Ver docs/tenants/lafamilia-business-context.md
 const rotisserieCatalog = [
   {
@@ -112,8 +112,8 @@ const rotisserieCatalog = [
       {
         id: "rotprod_lafamilia_menu_dia",
         name: "Menú del día",
-        description: "Plato del día (cambia diariamente) + entrada. Consultá el menú de hoy.",
-        priceInCents: 500000,
+        description: "Comida al plato casera hecha en el día. Consultá el menú semanal.",
+        priceInCents: 600000,
         sortOrder: 1,
       },
     ],
@@ -123,88 +123,132 @@ const rotisserieCatalog = [
     name: "Pizzas",
     sortOrder: 2,
     products: [
-      { id: "rotprod_lafamilia_pizza_muzzarella", name: "Muzzarella", priceInCents: 900000, sortOrder: 1 },
-      { id: "rotprod_lafamilia_pizza_napolitana", name: "Napolitana", priceInCents: 1200000, sortOrder: 2 },
-      { id: "rotprod_lafamilia_pizza_fugazza", name: "Fugazza", priceInCents: 1100000, sortOrder: 3 },
-      { id: "rotprod_lafamilia_pizza_provenzal", name: "Provenzal", priceInCents: 1100000, sortOrder: 4 },
-      { id: "rotprod_lafamilia_pizza_jamon_huevo", name: "Jamón y huevo", priceInCents: 1250000, sortOrder: 5 },
-      { id: "rotprod_lafamilia_pizza_a_caballo", name: "A caballo", priceInCents: 1500000, sortOrder: 6 },
-      { id: "rotprod_lafamilia_pizza_alemana", name: "Alemana", priceInCents: 1500000, sortOrder: 7 },
-    ],
-  },
-  {
-    id: "rotcat_lafamilia_empanadas",
-    name: "Empanadas",
-    sortOrder: 3,
-    products: [
-      {
-        id: "rotprod_lafamilia_empanada_unidad",
-        name: "Empanada (unidad)",
-        description: "Jamón y queso, verdura, choclo, cebolla y queso (consultar stock).",
-        priceInCents: 250000,
-        sortOrder: 1,
-      },
-      { id: "rotprod_lafamilia_empanadas_media_docena", name: "Media docena (6)", priceInCents: 1500000, sortOrder: 2 },
-      { id: "rotprod_lafamilia_empanadas_docena", name: "Docena (12)", priceInCents: 2800000, sortOrder: 3 },
-    ],
-  },
-  {
-    id: "rotcat_lafamilia_hamburguesas",
-    name: "Hamburguesas",
-    sortOrder: 4,
-    products: [
-      { id: "rotprod_lafamilia_hamb_completa", name: "Completa", description: "Sale con papas.", priceInCents: 1050000, sortOrder: 1 },
-      { id: "rotprod_lafamilia_hamb_doble_carne", name: "Doble carne", description: "Sale con papas.", priceInCents: 1250000, sortOrder: 2 },
-      { id: "rotprod_lafamilia_hamb_doble_cheddar", name: "Doble cheddar", description: "Sale con papas.", priceInCents: 1450000, sortOrder: 3 },
-    ],
-  },
-  {
-    id: "rotcat_lafamilia_hamburpizza",
-    name: "Hamburpizza",
-    sortOrder: 5,
-    products: [
-      { id: "rotprod_lafamilia_hamburpizza", name: "Hamburpizza", description: "Sale con papas. Rinde dos personas.", priceInCents: 2800000, sortOrder: 1 },
-      { id: "rotprod_lafamilia_media_hamburpizza", name: "1/2 Hamburpizza", description: "Sale con papas.", priceInCents: 1800000, sortOrder: 2 },
+      { id: "rotprod_lafamilia_pizza_muzzarella", name: "Muzzarella", priceInCents: 1000000, sortOrder: 1 },
+      { id: "rotprod_lafamilia_pizza_napolitana", name: "Napolitana", priceInCents: 1300000, sortOrder: 2 },
+      { id: "rotprod_lafamilia_pizza_fugazza", name: "Fugazza", priceInCents: 1200000, sortOrder: 3 },
+      { id: "rotprod_lafamilia_pizza_provenzal", name: "Provenzal", priceInCents: 1200000, sortOrder: 4 },
+      { id: "rotprod_lafamilia_pizza_jamon_huevo", name: "Jamón y huevo", priceInCents: 1500000, sortOrder: 5 },
+      { id: "rotprod_lafamilia_pizza_alemana", name: "Alemana", priceInCents: 1700000, sortOrder: 6 },
+      { id: "rotprod_lafamilia_pizza_a_caballo", name: "A caballo", priceInCents: 1800000, sortOrder: 7 },
     ],
   },
   {
     id: "rotcat_lafamilia_tartas",
     name: "Tartas",
+    sortOrder: 3,
+    products: [
+      { id: "rotprod_lafamilia_tarta_jamon_queso", name: "Tarta de jamón y queso", description: "Consultar stock.", priceInCents: 1300000, sortOrder: 1 },
+      { id: "rotprod_lafamilia_tarta_verdura", name: "Tarta de verdura", description: "Consultar stock.", priceInCents: 1100000, sortOrder: 2 },
+      { id: "rotprod_lafamilia_media_tarta", name: "1/2 tarta", description: "Sabores según stock.", priceInCents: 700000, sortOrder: 3 },
+      { id: "rotprod_lafamilia_mini_tarta", name: "Mini tarta", description: "Sabores según stock.", priceInCents: 400000, sortOrder: 4 },
+    ],
+  },
+  {
+    id: "rotcat_lafamilia_empanadas",
+    name: "Empanadas",
+    sortOrder: 4,
+    products: [
+      { id: "rotprod_lafamilia_empanada_jq_verdura", name: "Empanada de jamón y queso o verdura", priceInCents: 150000, sortOrder: 1 },
+      { id: "rotprod_lafamilia_empanada_carne", name: "Empanada de carne", priceInCents: 200000, sortOrder: 2 },
+      { id: "rotprod_lafamilia_empanadas_media_docena", name: "Empanadas: 6 unidades", description: "Jamón y queso o verdura. Para carne, consultar.", priceInCents: 900000, sortOrder: 3 },
+      { id: "rotprod_lafamilia_empanadas_docena", name: "Empanadas: 12 unidades", description: "Jamón y queso o verdura. Para carne, consultar.", priceInCents: 1800000, sortOrder: 4 },
+    ],
+  },
+  {
+    id: "rotcat_lafamilia_sanguches_milanesa",
+    name: "Sánguches de milanesa",
+    sortOrder: 5,
+    products: [
+      { id: "rotprod_lafamilia_gigante_carne", name: "Gigante de carne", description: "Rinde dos personas. Podés agregar papas fritas.", priceInCents: 1500000, sortOrder: 1 },
+      { id: "rotprod_lafamilia_gigante_pollo", name: "Gigante de pollo", description: "Rinde dos personas. Podés agregar papas fritas.", priceInCents: 1200000, sortOrder: 2 },
+      { id: "rotprod_lafamilia_lloron_carne", name: "El Llorón de carne", description: "Rinde dos personas. Podés agregar papas fritas.", priceInCents: 1500000, sortOrder: 3 },
+      { id: "rotprod_lafamilia_lloron_pollo", name: "El Llorón de pollo", description: "Rinde dos personas. Podés agregar papas fritas.", priceInCents: 1200000, sortOrder: 4 },
+    ],
+  },
+  {
+    id: "rotcat_lafamilia_hamburguesas",
+    name: "Hamburguesas",
     sortOrder: 6,
     products: [
-      { id: "rotprod_lafamilia_tarta_jamon_queso", name: "Jamón y queso", description: "Consultar stock.", priceInCents: 1000000, sortOrder: 1 },
-      { id: "rotprod_lafamilia_tarta_verdura", name: "Verdura", description: "Consultar stock.", priceInCents: 900000, sortOrder: 2 },
-      { id: "rotprod_lafamilia_media_tarta", name: "1/2 tarta", priceInCents: 600000, sortOrder: 3 },
-      { id: "rotprod_lafamilia_mini_tarta", name: "Mini tarta", priceInCents: 300000, sortOrder: 4 },
+      { id: "rotprod_lafamilia_hamb_completa", name: "Hamburguesa completa", description: "Sale con papas fritas.", priceInCents: 1200000, sortOrder: 1 },
+      { id: "rotprod_lafamilia_hamb_doble_carne", name: "Hamburguesa doble carne", description: "Sale con papas fritas.", priceInCents: 1300000, sortOrder: 2 },
+      { id: "rotprod_lafamilia_hamb_doble_cheddar", name: "Hamburguesa doble cheddar", description: "Sale con papas fritas.", priceInCents: 1500000, sortOrder: 3 },
+      { id: "rotprod_lafamilia_hamb_vegetariana", name: "Hamburguesa vegetariana", description: "Sale con papas fritas.", priceInCents: 1000000, sortOrder: 4 },
+    ],
+  },
+  {
+    id: "rotcat_lafamilia_hamburpizza",
+    name: "Hamburpizza",
+    sortOrder: 7,
+    products: [
+      { id: "rotprod_lafamilia_media_hamburpizza", name: "1/2 Hamburpizza", description: "Podés agregar papas fritas.", priceInCents: 1500000, sortOrder: 1 },
+      { id: "rotprod_lafamilia_hamburpizza", name: "Hamburpizza entera", description: "Podés agregar papas fritas.", priceInCents: 2500000, sortOrder: 2 },
+    ],
+  },
+  {
+    id: "rotcat_lafamilia_pizzanesa",
+    name: "Pizzanesa",
+    sortOrder: 8,
+    products: [
+      { id: "rotprod_lafamilia_media_pizzanesa", name: "1/2 Pizzanesa", description: "Podés agregar papas fritas.", priceInCents: 1500000, sortOrder: 1 },
+      { id: "rotprod_lafamilia_pizzanesa_entera", name: "Pizzanesa entera", description: "Podés agregar papas fritas.", priceInCents: 2500000, sortOrder: 2 },
+    ],
+  },
+  {
+    id: "rotcat_lafamilia_adicionales",
+    name: "Adicionales",
+    sortOrder: 9,
+    products: [
+      { id: "rotprod_lafamilia_adicional_papas", name: "Adicional de papas fritas", description: "Solo para sánguches de milanesa, hamburpizza o pizzanesa.", priceInCents: 300000, sortOrder: 1 },
+    ],
+  },
+  {
+    id: "rotcat_lafamilia_papas",
+    name: "Papas fritas",
+    sortOrder: 10,
+    products: [
+      { id: "rotprod_lafamilia_papas_fritas", name: "Bandeja mediana de papas fritas", priceInCents: 500000, sortOrder: 1 },
     ],
   },
   {
     id: "rotcat_lafamilia_comida_plato",
     name: "Comida al plato",
-    sortOrder: 7,
+    sortOrder: 11,
     products: [
-      { id: "rotprod_lafamilia_tortilla_simple", name: "Tortilla de papa simple", priceInCents: 700000, sortOrder: 1 },
-      { id: "rotprod_lafamilia_tortilla_rellena", name: "Tortilla de papa rellena", priceInCents: 900000, sortOrder: 2 },
+      { id: "rotprod_lafamilia_tortilla_simple", name: "Tortilla simple", priceInCents: 800000, sortOrder: 1 },
+      { id: "rotprod_lafamilia_tortilla_rellena", name: "Tortilla rellena", priceInCents: 1000000, sortOrder: 2 },
     ],
   },
   {
     id: "rotcat_lafamilia_pastas",
     name: "Pastas",
-    sortOrder: 8,
+    sortOrder: 12,
     products: [
-      { id: "rotprod_lafamilia_tallarines", name: "Tallarines caseros al huevo", description: "Salsas: fileto, blanca o bolognesa.", priceInCents: 700000, sortOrder: 1 },
-      { id: "rotprod_lafamilia_ravioles", name: "Ravioles de verdura", description: "Salsas: fileto, blanca o bolognesa.", priceInCents: 700000, sortOrder: 2 },
-      { id: "rotprod_lafamilia_noquis", name: "Ñoquis", description: "Salsas: fileto, blanca o bolognesa.", priceInCents: 700000, sortOrder: 3 },
-      { id: "rotprod_lafamilia_sorrentinos", name: "Sorrentinos", description: "Salsas: fileto, blanca o bolognesa.", priceInCents: 700000, sortOrder: 4 },
+      { id: "rotprod_lafamilia_tallarines", name: "Tallarines caseros", description: "Con salsa fileto, blanca o boloñesa.", priceInCents: 600000, sortOrder: 1 },
+      { id: "rotprod_lafamilia_ravioles", name: "Ravioles", description: "Con salsa fileto, blanca o boloñesa.", priceInCents: 600000, sortOrder: 2 },
+      { id: "rotprod_lafamilia_noquis", name: "Ñoquis", description: "Con salsa fileto, blanca o boloñesa.", priceInCents: 600000, sortOrder: 3 },
+      { id: "rotprod_lafamilia_canelones", name: "Canelones", description: "Con salsa fileto, blanca o boloñesa.", priceInCents: 700000, sortOrder: 4 },
+      { id: "rotprod_lafamilia_lasania", name: "Lasaña", description: "Con salsa fileto, blanca o boloñesa.", priceInCents: 700000, sortOrder: 5 },
     ],
   },
   {
-    id: "rotcat_lafamilia_papas",
-    name: "Papas",
-    sortOrder: 9,
+    id: "rotcat_lafamilia_miga_tostados",
+    name: "Sánguches de miga y tostados",
+    sortOrder: 13,
     products: [
-      { id: "rotprod_lafamilia_papas_fritas", name: "Papas fritas", priceInCents: 500000, sortOrder: 1 },
-      { id: "rotprod_lafamilia_papas_cheddar_verdeo", name: "Papas con cheddar y verdeo", priceInCents: 700000, sortOrder: 2 },
+      { id: "rotprod_lafamilia_tostados", name: "Tostados", priceInCents: 500000, sortOrder: 1 },
+      { id: "rotprod_lafamilia_miga_simples", name: "Sánguches de miga simples", priceInCents: 700000, sortOrder: 2 },
+      { id: "rotprod_lafamilia_miga_triples", name: "Sánguches de miga triples", priceInCents: 900000, sortOrder: 3 },
+    ],
+  },
+  {
+    id: "rotcat_lafamilia_postres",
+    name: "Postres",
+    sortOrder: 14,
+    products: [
+      { id: "rotprod_lafamilia_postre_casa", name: "Postre de la casa", description: "Porción grande de budín de pan o flan.", priceInCents: 300000, sortOrder: 1 },
+      { id: "rotprod_lafamilia_postre_pote", name: "Postre en pote", description: "Variedad de sabores.", priceInCents: 450000, sortOrder: 2 },
+      { id: "rotprod_lafamilia_postres_dos_potes", name: "Promo: 2 postres en pote", description: "Variedad de sabores.", priceInCents: 800000, sortOrder: 3 },
     ],
   },
 ];
@@ -217,6 +261,15 @@ async function seedRotisserie() {
       id: rotisserieTenant.id,
       slug: rotisserieTenant.slug,
       name: rotisserieTenant.name,
+    },
+  });
+
+  await prisma.rotisserieTenantSettings.upsert({
+    where: { tenantId: rotisserieTenant.id },
+    update: {},
+    create: {
+      tenantId: rotisserieTenant.id,
+      weeklyMenu: {},
     },
   });
 
@@ -404,12 +457,16 @@ async function main() {
   await seedYoni247();
 }
 
-main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (error) => {
-    console.error(error);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+module.exports = { rotisserieCatalog };
+
+if (require.main === module) {
+  main()
+    .then(async () => {
+      await prisma.$disconnect();
+    })
+    .catch(async (error) => {
+      console.error(error);
+      await prisma.$disconnect();
+      process.exit(1);
+    });
+}

@@ -1,8 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PUBLIC_TENANT_HOSTS } from "./publicTenantHosts";
+import { platformFont } from "./platform/fonts";
+import { PlatformFooter } from "./platform/PlatformFooter";
+import { PlatformHeader } from "./platform/PlatformHeader";
+import { CONTAINER } from "./platform/ui";
 
 interface ShellProps {
   children: React.ReactNode;
@@ -17,32 +20,39 @@ export function Shell({ children, isPublicTenantHost = false }: ShellProps): Rea
   const isLegalPath = pathname?.startsWith("/privacy") || pathname?.startsWith("/terms") || false;
   const isPublicTenant = isPublicTenantPath || isLegalPath || isPublicTenantHost;
 
+  // Sitios de tenant: sin header ni footer de plataforma, con el CSS clásico intacto.
+  if (isPublicTenant) {
+    return (
+      <div className="shell">
+        <main className="site-main">{children}</main>
+      </div>
+    );
+  }
+
+  // Panel de plataforma: sistema visual propio (Tailwind), acotado a `.pm-root`.
+  if (pathname === "/") {
+    return (
+      <div className={`${PLATFORM_SCOPE} flex min-h-screen flex-col bg-[#f7f7f8]`}>
+        <PlatformHeader />
+        <main className={`${CONTAINER} flex-1 py-8 lg:py-10`}>{children}</main>
+        <PlatformFooter />
+      </div>
+    );
+  }
+
+  // Rutas sin host ni slug público (tenants demo, 404): header y footer de
+  // plataforma, contenido con el CSS clásico para no alterar esas páginas.
   return (
-    <div className="shell">
-      {!isPublicTenant && (
-        <header className="site-header">
-          <div className="site-header__inner">
-            <Link className="brand" href="/">
-              <span className="brand__mark">BM</span>
-              <span>Barber Modular</span>
-            </Link>
-            <nav className="site-nav" aria-label="Principal">
-              <Link href="/">Inicio</Link>
-              <Link href="/crown/barbershop">Demo Crown</Link>
-              <Link href="/heritage/barbershop">Demo Heritage</Link>
-            </nav>
-          </div>
-        </header>
-      )}
-      <main className="site-main">{children}</main>
-      {!isPublicTenant && (
-        <footer className="site-footer">
-          <div className="site-footer__inner">
-            <span>Next.js App Router + arquitectura modular</span>
-            <span>Tenant-aware desde el primer día</span>
-          </div>
-        </footer>
-      )}
+    <div className="shell flex min-h-screen flex-col">
+      <div className={PLATFORM_SCOPE}>
+        <PlatformHeader />
+      </div>
+      <main className="site-main flex-1">{children}</main>
+      <div className={PLATFORM_SCOPE}>
+        <PlatformFooter />
+      </div>
     </div>
   );
 }
+
+const PLATFORM_SCOPE = `pm-root ${platformFont.className} text-zinc-900 antialiased`;

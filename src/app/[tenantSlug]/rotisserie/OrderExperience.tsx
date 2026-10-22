@@ -4,6 +4,12 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CatalogView } from "../../../modules/rotisserie/application/services/GetCatalogService";
 import { MAX_UNITS_PER_PRODUCT } from "../../../modules/rotisserie/domain/value-objects/orderTypes";
+import {
+  tenantUsesWeeklyMenu,
+  WEEKLY_MENU_DAYS,
+  type WeeklyMenu,
+  type WeeklyMenuDayKey,
+} from "../../../modules/rotisserie/infra/settings/rotisserieWeeklyMenu";
 
 type FulfillmentType = "pickup" | "delivery";
 type PaymentMethod = "cash" | "transfer";
@@ -13,6 +19,8 @@ interface OrderExperienceProps {
   catalog: CatalogView;
   orderBasePath?: string;
   deliveryFeeInCents?: number;
+  weeklyMenu?: WeeklyMenu;
+  currentWeekday?: WeeklyMenuDayKey;
 }
 
 interface ProductInfo {
@@ -31,7 +39,14 @@ function formatPrice(priceInCents: number): string {
   }).format(priceInCents / 100);
 }
 
-export function OrderExperience({ tenantSlug, catalog, orderBasePath, deliveryFeeInCents = 250000 }: OrderExperienceProps): React.JSX.Element {
+export function OrderExperience({
+  tenantSlug,
+  catalog,
+  orderBasePath,
+  deliveryFeeInCents = 250000,
+  weeklyMenu,
+  currentWeekday = "monday",
+}: OrderExperienceProps): React.JSX.Element {
   const resolvedOrderBasePath = orderBasePath ?? `/${tenantSlug}/rotisserie`;
   const router = useRouter();
 
@@ -144,6 +159,27 @@ export function OrderExperience({ tenantSlug, catalog, orderBasePath, deliveryFe
   return (
     <div className="tenant-layout">
       <section className="agenda-shell">
+        {weeklyMenu && tenantUsesWeeklyMenu(tenantSlug) ? (
+        <article className="panel rotisserie-weekly-menu">
+          <p className="eyebrow">Menú de hoy</p>
+          <h2 className="rotisserie-weekly-menu__today">
+            {WEEKLY_MENU_DAYS.find(({ key }) => key === currentWeekday)?.label}
+          </h2>
+          <p className="rotisserie-weekly-menu__today-description">
+            {weeklyMenu[currentWeekday] || "Consultá el menú disponible de hoy."}
+          </p>
+          <h3 className="rotisserie-weekly-menu__heading">Menú semanal</h3>
+          <ul className="service-list rotisserie-weekly-menu__days">
+            {WEEKLY_MENU_DAYS.map(({ key, label }) => (
+              <li className={key === currentWeekday ? "rotisserie-weekly-menu__day--today" : undefined} key={key}>
+                <strong>{label}</strong>
+                <span className="muted">{weeklyMenu[key] || "Consultar"}</span>
+              </li>
+            ))}
+          </ul>
+        </article>
+        ) : null}
+
         {catalog.map((category) => (
           <article key={category.id} className="panel rotisserie-category-panel">
             <h2 style={{ margin: "0 0 1rem", fontSize: "1.4rem", letterSpacing: "-0.02em" }}>

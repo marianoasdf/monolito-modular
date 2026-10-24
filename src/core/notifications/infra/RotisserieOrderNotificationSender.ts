@@ -78,11 +78,23 @@ export class RotisserieOrderNotificationSender implements NotificationSender {
     const itemsSummary = message.metadata?.itemsSummary ?? "N/A";
     const totalFormatted = message.metadata?.totalFormatted ?? "N/A";
     const notes = sanitizeTemplateTextParameter(message.metadata?.notes ?? "Sin nota");
-
-    // Notificación a los dueños
-    for (const recipient of this.recipientPhones) {
-      try {
-        await this.sendTemplate(recipient, ROTISSERIE_ORDER_TEMPLATE_NAME, [
+    const ownerParameters = message.metadata?.deliveryAddress !== undefined
+      ? [
+          { type: "text", text: customerName },
+          { type: "text", text: customerPhone },
+          { type: "text", text: fulfillmentType },
+          {
+            type: "text",
+            text: sanitizeTemplateTextParameter(
+              message.metadata.deliveryAddress.trim() || "Retiro en el local",
+            ),
+          },
+          { type: "text", text: itemsSummary },
+          { type: "text", text: notes },
+          { type: "text", text: paymentMethod },
+          { type: "text", text: totalFormatted },
+        ]
+      : [
           { type: "text", text: customerName },
           { type: "text", text: customerPhone },
           { type: "text", text: fulfillmentType },
@@ -90,7 +102,12 @@ export class RotisserieOrderNotificationSender implements NotificationSender {
           { type: "text", text: itemsSummary },
           { type: "text", text: totalFormatted },
           { type: "text", text: notes },
-        ]);
+        ];
+
+    // Notificación a los dueños
+    for (const recipient of this.recipientPhones) {
+      try {
+        await this.sendTemplate(recipient, ROTISSERIE_ORDER_TEMPLATE_NAME, ownerParameters);
       } catch (error) {
         console.error(`Error enviando notificación al dueño (${recipient})`, error);
         throw error;

@@ -21,7 +21,6 @@ Fotografía del repo. Donde el código no alcanza para saber si algo está en pr
 - **Pedidos:** el tipo admite `confirmed` y `cancelled`, pero el alta deja `pending` y no hay caso de uso ni pantalla para cambiarlo. El admin no lista pedidos.
 - **Turnos:** el enum tiene `COMPLETED` y `CANCELLED`. Nada en `src/` asigna `COMPLETED`. La acción de admin llamada cancel borra la fila (`deleteMany`), no marca `CANCELLED`.
 - **Servicios de barbería** (corte / barba / combo y precios), ciudad, barrio y la frase de horario están hardcodeados. La grilla semanal sí es configurable, pero el sitio solo muestra hoy.
-- **WhatsApp entrante:** el webhook verifica el token y registra el mensaje. No responde ni crea turnos o pedidos.
 - **Kiosco y heladería** de Yoni están en el contexto de negocio, no en el modelo.
 - `npm run lint` corre con `.eslintrc.json` (`next/core-web-vitals`). No hay tests ni CI en el repo.
 - Tailwind 3.4 está instalado con preflight desactivado y solo lo usa el panel de plataforma (`src/app/platform`, `Shell`). Sitios de tenant y admins siguen con el CSS clásico de `globals.css`.
@@ -33,7 +32,7 @@ Fotografía del repo. Donde el código no alcanza para saber si algo está en pr
 - `next.config.js` duplica los hosts de La Familia y de Yoni. Un dominio nuevo en `publicTenantHosts.ts` no obtiene esos rewrites solo.
 - `POST /api/barbershop/appointments` y las rutas de pago confían el `tenantId` que manda el cliente. Rotisería no.
 - La cookie de admin no está firmada. Quien pueda setear `admin_session_{slug}=ok` pasa el chequeo de sesión. La contraseña solo se valida en el login.
-- El webhook de Mercado Pago no verifica firma: prueba el payment id con el token de cada tenant hasta que uno responde. El `POST /webhook` de WhatsApp tampoco valida firma de Meta.
+- El webhook de Mercado Pago no verifica firma: prueba el payment id con el token de cada tenant hasta que uno responde.
 - El descuento de stock hace `updateMany` y no mira si actualizó filas. Si otro pedido se llevó el stock en el medio, este pedido puede commitearse igual.
 - `scripts/migrate-to-tenant-integrations.ts` importa `bcrypt`. El resto del proyecto usa `bcryptjs`, y `bcrypt` no está en `package.json`.
 - El seed actualiza nombre y teléfono de clientes de barbería cuando el número ya existe. El resto del seed no pisa filas.

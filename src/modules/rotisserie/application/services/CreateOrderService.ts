@@ -23,6 +23,7 @@ export class CreateOrderService implements UseCase<CreateOrderCommand, { orderId
     private readonly productRepository: ProductRepository,
     private readonly orderRepository: OrderRepository,
     private readonly notificationSender: NotificationSender,
+    private readonly sendsDeliveryAddress = false,
   ) {}
 
   private aggregateQuantities(command: CreateOrderCommand): Map<string, number> {
@@ -132,6 +133,9 @@ export class CreateOrderService implements UseCase<CreateOrderCommand, { orderId
           totalFormatted,
           fulfillmentType,
           paymentMethod,
+          ...(this.sendsDeliveryAddress
+            ? { deliveryAddress: orderProps.deliveryAddress ?? "" }
+            : {}),
         },
       });
     } catch (error) {

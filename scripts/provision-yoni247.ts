@@ -22,7 +22,6 @@ async function provision() {
   const requiredEnvVars = [
     "YONI247_WHATSAPP_PHONE_NUMBER_ID",
     "YONI247_WHATSAPP_API_TOKEN",
-    "YONI247_WHATSAPP_WEBHOOK_VERIFY_TOKEN",
     "YONI247_ADMIN_ACCESS_PASSWORD",
   ];
 
@@ -69,7 +68,6 @@ async function provision() {
     phoneNumberId: process.env.YONI247_WHATSAPP_PHONE_NUMBER_ID,
     apiToken: apiTokenEncrypted,
     recipientPhones: ["+5493434671787", "+5493454933676"],
-    webhookVerifyToken: process.env.YONI247_WHATSAPP_WEBHOOK_VERIFY_TOKEN,
   };
 
   if (existingIntegration) {

@@ -108,5 +108,34 @@ Web con **pedidos automáticos** que reemplace la dependencia del grupo de Whats
 ## Notas para próximas fases
 
 - Mantener sincronizada esta fuente con cambios de carta confirmados por la dueña.
-- WhatsApp Cloud: confirmación automática de pedidos + responder "qué hay hoy" / "la carta" (fase posterior).
+- WhatsApp Cloud de pedidos: plantillas `rotisserie_new_order` y `rotisserie_order_received`, idioma `es_AR`, en la cuenta de La Familia. La carga de credenciales es `scripts/provision-lafamilia-whatsapp.ts`. Responder "qué hay hoy" / "la carta" sigue pendiente.
+
+### `rotisserie_new_order` (al negocio, 8 variables)
+
+Entró un pedido nuevo a La Familia.
+
+Cliente: {{1}}
+Teléfono: {{2}}
+Entrega: {{3}}
+Dirección: {{4}}
+Pidió: {{5}}
+Nota: {{6}}
+Pago: {{7}}
+Total: {{8}}
+
+A prepararlo.
+
+Ejemplos, en orden: María, +5493455000000, Delivery, San Luis 123, 1x Menú del día, Sin cebolla, Efectivo, $8.000. Si es retiro, {{4}} dice "Retiro en el local".
+
+### `rotisserie_order_received` (al cliente, 3 variables)
+
+Hola {{1}}, ya quedó tu pedido en La Familia.
+
+Pediste: {{2}}
+Total: {{3}}
+
+En un rato te escribimos para confirmar. Hecho en casa.
+
+Ejemplos: María, 1x Menú del día, $8.000.
+
 - Capturas de referencia (cartel, IG, grupo de WhatsApp) guardadas en la carpeta `assets/` del proyecto.

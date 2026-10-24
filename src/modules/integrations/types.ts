@@ -5,7 +5,6 @@ export interface WhatsAppConfig {
   apiToken: EncryptedValue;
   recipientPhone?: string;
   recipientPhones?: string[];
-  webhookVerifyToken: string;
 }
 
 export interface MercadoPagoConfig {
@@ -39,8 +38,7 @@ export function isWhatsAppConfig(value: unknown): value is WhatsAppConfig {
   const hasRecipient =
     typeof config.recipientPhone === "string" ||
     (Array.isArray(config.recipientPhones) && (config.recipientPhones as unknown[]).length > 0);
-  const hasWebhookVerifyToken = typeof config.webhookVerifyToken === "string";
-  return hasPhoneNumberId && hasApiToken && hasRecipient && hasWebhookVerifyToken;
+  return hasPhoneNumberId && hasApiToken && hasRecipient;
 }
 
 export function resolveRecipientPhones(config: WhatsAppConfig): string[] {

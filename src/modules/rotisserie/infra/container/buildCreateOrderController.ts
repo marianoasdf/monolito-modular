@@ -34,10 +34,16 @@ export async function buildCreateOrderController(tenantId: string): Promise<Crea
     );
   }
 
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { slug: true },
+  });
+
   const service = new CreateOrderService(
     new PrismaProductRepository(prisma),
     new PrismaOrderRepository(prisma),
     notificationSender,
+    tenant?.slug === "lafamilia",
   );
 
   return new CreateOrderController(service, tenantId);

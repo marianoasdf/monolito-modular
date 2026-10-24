@@ -23,7 +23,6 @@ async function migrate() {
     "WHATSAPP_PHONE_NUMBER_ID",
     "WHATSAPP_API_TOKEN",
     "WHATSAPP_RECIPIENT_PHONE_NUMBER",
-    "WHATSAPP_WEBHOOK_VERIFY_TOKEN",
     "ADMIN_ACCESS_PASSWORD",
   ];
 
@@ -77,10 +76,9 @@ async function migrate() {
 
   if (existingIntegration) {
     console.log(
-      "⚠️  TenantIntegration para 'whatsapp' ya existe. Actualizando con webhookVerifyToken en texto plano...\n"
+      "⚠️  TenantIntegration para 'whatsapp' ya existe. Actualizando...\n"
     );
 
-    // 7. Encriptar solo apiToken de WhatsApp (webhookVerifyToken en texto plano)
     const apiTokenEncrypted = encrypt(process.env.WHATSAPP_API_TOKEN!);
 
     console.log("📝 Se actualizará TenantIntegration (whatsapp):");
@@ -88,8 +86,7 @@ async function migrate() {
     console.log(`   - provider: whatsapp`);
     console.log(`   - config.phoneNumberId: ${process.env.WHATSAPP_PHONE_NUMBER_ID}`);
     console.log(`   - config.recipientPhone: ${process.env.WHATSAPP_RECIPIENT_PHONE_NUMBER}`);
-    console.log(`   - config.apiToken: [encriptado]`);
-    console.log(`   - config.webhookVerifyToken: [texto plano]\n`);
+    console.log(`   - config.apiToken: [encriptado]\n`);
 
     // 8. Actualizar TenantIntegration
     await prisma.tenantIntegration.update({
@@ -104,14 +101,12 @@ async function migrate() {
           phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
           apiToken: apiTokenEncrypted,
           recipientPhone: process.env.WHATSAPP_RECIPIENT_PHONE_NUMBER,
-          webhookVerifyToken: process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN,
         },
       },
     });
 
     console.log("✅ TenantIntegration actualizado exitosamente\n");
   } else {
-    // 7. Encriptar solo apiToken de WhatsApp (webhookVerifyToken en texto plano)
     const apiTokenEncrypted = encrypt(process.env.WHATSAPP_API_TOKEN!);
 
     console.log("📝 Se creará TenantIntegration (whatsapp):");
@@ -119,8 +114,7 @@ async function migrate() {
     console.log(`   - provider: whatsapp`);
     console.log(`   - config.phoneNumberId: ${process.env.WHATSAPP_PHONE_NUMBER_ID}`);
     console.log(`   - config.recipientPhone: ${process.env.WHATSAPP_RECIPIENT_PHONE_NUMBER}`);
-    console.log(`   - config.apiToken: [encriptado]`);
-    console.log(`   - config.webhookVerifyToken: [texto plano]\n`);
+    console.log(`   - config.apiToken: [encriptado]\n`);
 
     // 8. Crear TenantIntegration
     await prisma.tenantIntegration.create({
@@ -131,7 +125,6 @@ async function migrate() {
           phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
           apiToken: apiTokenEncrypted,
           recipientPhone: process.env.WHATSAPP_RECIPIENT_PHONE_NUMBER,
-          webhookVerifyToken: process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN,
         },
       },
     });

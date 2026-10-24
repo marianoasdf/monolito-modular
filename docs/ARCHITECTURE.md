@@ -13,7 +13,6 @@ src/app/                  shell: páginas, layouts, route handlers, server actio
   admin/                  login y paneles (barbería y rotisería)
   api/barbershop/         alta de turno y Mercado Pago
   api/rotisserie/orders/  alta de pedido
-  webhook/                verificación y log de WhatsApp (Meta)
   [tenantSlug]/           páginas por slug
 src/modules/barbershop/   turnos
 src/modules/rotisserie/   carta y pedidos
@@ -111,11 +110,9 @@ Las server actions de `src/app/admin/actions.ts` revisan esa cookie antes de esc
 WhatsApp sale por Graph API `v19.0`, templates `es_AR`:
 
 - Barbería: `WebhookNotificationSender` — `barbershop_appointment_v2` al negocio y `barbershop_confirmation_v2` al cliente. Solo el primer teléfono de `recipientPhones`.
-- Rotisería: `RotisserieOrderNotificationSender` — `rotisserie_new_order` a cada dueño y `rotisserie_order_received` al cliente. Sin credenciales, el pedido usa `ConsoleNotificationSender`.
+- Rotisería: `RotisserieOrderNotificationSender` — `rotisserie_new_order` a cada dueño y `rotisserie_order_received` al cliente. Sin credenciales, el pedido usa `ConsoleNotificationSender`. La Familia manda ocho variables en orden de lectura (la dirección es la cuarta) y las sanitiza igual que la nota. Yoni sigue con sus siete, en el orden de su plantilla.
 
-`GET /webhook` acepta el `hub.verify_token` si coincide con alguna integración WhatsApp. `POST /webhook` solo loguea mensajes entrantes.
-
-Scripts de carga (no son parte del runtime): `scripts/migrate-to-tenant-integrations.ts`, `scripts/update-whatsapp-token.ts`, `scripts/provision-mgbarber-mercadopago.ts`, `scripts/provision-yoni247.ts`.
+Scripts de carga (no son parte del runtime): `scripts/migrate-to-tenant-integrations.ts`, `scripts/update-whatsapp-token.ts`, `scripts/provision-mgbarber-mercadopago.ts`, `scripts/provision-yoni247.ts`, `scripts/provision-lafamilia-whatsapp.ts`.
 
 ## Qué hace cada vertical
 

@@ -13,6 +13,7 @@ export interface NotificationMessage {
     totalFormatted?: string;
     fulfillmentType?: string;
     paymentMethod?: string;
+    deliveryAddress?: string;
   };
 }
 

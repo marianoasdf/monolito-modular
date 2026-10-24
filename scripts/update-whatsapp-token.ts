@@ -52,9 +52,9 @@ async function updateWhatsAppToken(): Promise<void> {
     data: {
       config: {
         phoneNumberId: config.phoneNumberId,
-        recipientPhone: config.recipientPhone,
-        webhookVerifyToken: config.webhookVerifyToken,
         apiToken: encrypt(apiToken),
+        ...(config.recipientPhone ? { recipientPhone: config.recipientPhone } : {}),
+        ...(config.recipientPhones?.length ? { recipientPhones: config.recipientPhones } : {}),
       },
     },
   });
